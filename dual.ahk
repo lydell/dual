@@ -323,23 +323,3 @@ Dual_comboKey:
 	return
 
 Dual_end:
-
-Dual.set("LShift", "(")
-Dual.set("f", _, "RCtrl")
-Dual.set("r", _, "F12")
-Dual.launch()
-return
-
-; #If GetKeyState("Shift")
-; c::SendInput 1337
-; a::SendInput 2333
-^+a::
-; #If GetKeyState("Ctrl")
-#If Dual.modifiersDown("Ctrl", "shift")
-a::Dual.send("333")
-#If
-F12 & a::
-#If Dual.modifiersDown("F12")
-a::Dual.send("777")
-#If
-
