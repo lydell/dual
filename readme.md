@@ -18,12 +18,15 @@ It is currently quite stable and feature complete, but needs more testing.
 Usage
 =====
 
-Put the script in a nice location. (TODO: Better installation description.)
+The best thing is to put a copy of the files in a directory next to the AutoHotkey file you wish to
+use it with. Either download it manually, clone with git (`git clone
+https://github.com/lydell/dual.git`) or, preferably, add it as a submodule (`git submodule add
+https://github.com/lydell/dual.git`).
 
-Then include the script into an AutoHotkey file of choice. That exposes the `Dual` object, which is
-used for configuration, setting up you dual-role keys and finally launching them. Example:
+Then include the script into the AutoHotkey file of choice. That exposes the `Dual` object, which is
+used for configuration, setting up your dual-role keys and finally launching them. Example:
 
-    #Include <Dual.ahk> ; TODO: Is this correct? Also sync with "put in a nice location".
+    #Include dual/dual.ahk
 
     Dual.comboKeys .= " å ä ö" ; Configuration for Swedish.
 
