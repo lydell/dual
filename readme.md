@@ -136,7 +136,7 @@ therefore skip sending the upKey when released. The comboKeys can be set via the
 property. Also, the dual-role keys are automatically combo keys. However, don't worry if they're
 also listed in the comboKeys setting—that is taken care of.
 
-But, wait? Does that mean that the downKey only can be combined with a specific set of keys? That
+But, wait! Does that mean that the downKey only can be combined with a specific set of keys? That
 kinda sucks! Well, yes it does. Fortunately, there is a way to deal with this, so that the downKey
 can be combined with _any_ key. Phew!
 
@@ -146,18 +146,51 @@ press character keys? So if you want to combine a downKey with a non-comboKey, j
 you hold down the dual-role key longer than the timeout (which you probably do anyway). The timeout
 can be set via the `Dual.timeout` property.
 
-The timeout also has another positive effect: If you ever change your mind half-way through a
-keyboard shortcut, that is, when holding a modifier down, you can just release it without worrying
+According to the above paragraph, if you combine a dual-role key with some other, non-comboKey
+within the timeout, that would result in both the combination _and_ the upKey. Right, I've already
+said that. However, that is not true. In reality, _only_ the upKey will be sent.
+
+The timeout actually takes care of one more thing.
+
+In the beginning of this section, I said that the first thing that happens when you press down a
+dual-role key is that {downKey down} is sent. That is actually not true. {downKey down} is not sent
+until the timeout has passed. That's why only the upKey is sent, and the combination does not occur,
+as described above. But why? Well, here we go:
+
+As mentioned under [Pros & Cons](#pros--cons), what makes it possible to combine a modifier key with
+another key is that the modifier only does something when held down. However, that is not true for
+_all_ modifiers. Take the Windows key for example. When released it opens the start menu (in fact,
+it is already a dual-role modifier key; a combination of a special modifier and an "open the start
+menu" key). Or the alt keys, which might show a hidden menu bar when released.
+
+Alright, what about those modifiers? Well, if you try to use them in dual-role keys, you will get
+trouble. For example, if you have combined the "w" and Windows keys, and you tap "w", you'd expect a
+"w", but instead the start menu is opened, and a "w" is typed in its search box. Ouch.
+
+That's why the downKey isn't sent down during the timeout. By doing so, {downKey up} is not sent if
+the dual-role key is released before the timeout has passed, and therefore does not interfere. Now
+you can type "w" again. If you wish to open the start menu, you have to hold the "w" key for longer
+than the timeout.
+
+But, wait again! So the dual-role key is not a modifier when held down until the timeout has passed?
+What about combinations with the comboKeys? The whole point of them was not having to hold the dual-
+role keys for longer than the timeout, right? Don't worry, the comboKeys force {downKey down} if the
+timeout hasn't passed. Yet a reason for comboKeys!
+
+The timeout also has yet another positive effect: If you ever change your mind half-way through a
+keyboard shortcut—that is, when holding a modifier down—you can just release it without worrying
 about having to clean up the upKey that was just sent.
 
-And there's more! When typing quickly, sometimes you might press down several keys simultaneously
-for a short period of time. If one of them is a dual-role key, you're in trouble. For example, let's
-say you've combined the space and shift keys, and you want to type "Hello world!". You type this
-really quickly, so that the space bar happens to be down when you type "w". That would produce
-"HelloWorld!".
+* * *
+
+Now, let's leave the timeout and move on. When typing quickly, sometimes you might press down
+several keys simultaneously for a short period of time. If one of them is a dual-role key, you're in
+trouble. For example, let's say you've combined the space and shift keys, and you want to type
+"Hello world!". You type this really quickly, so that the space bar happens to be down when you type
+"w". That would produce "HelloWorld!".
 
 The solution to this problem lies in its description. "Sometimes you might press down several keys
-simultaneously for a _short period of time._" Thus, let me introduce the "delay." It is in
+simultaneously for a _short period of time._" Thus, let me introduce the **"delay."** It is in
 relationship with the comboKeys. Now, the comboKeys have one more check to do. As before, they check
 if any dual-role keys are down. If so, they check how long time have elapsed since the were pressed
 down. If that time is shorter than the delay, release the downKey of the dual-role key in question
@@ -206,9 +239,10 @@ than reassigning this setting, it might be easier to append to it. For example, 
 do `Dual.comboKeys .= " å ä ö"`.
 
 `Dual.delay` is the number of milliseconds that you must hold a dual-role key in order for it to
-count as a combination with another key.
+count as a combination with another key (comboKeys only, though).
 
-`Dual.timeout` is the number of milliseconds after which the upKey won't be sent.
+`Dual.timeout` is the number of milliseconds after which the downKey starts to be sent, and the
+upKey won't be sent.
 
 `Dual.doublePress` is the maximum number of milliseconds between a release of a dual-role key and
 its next press that can elapse and still be called a doublePress.
@@ -307,7 +341,7 @@ It is a bit clunky, I know, but at least it works. Again, I would really like a 
 Tests
 =====
 
-Dual will hopefully be tested, perhaps using [YUnit], in the future.
+Dual will hopefully be tested in the future, perhaps using [YUnit].
 
 [YUnit]: https://github.com/Uberi/Yunit
 
@@ -315,6 +349,12 @@ Dual will hopefully be tested, perhaps using [YUnit], in the future.
 
 Changelog
 =========
+
+0.1.1 (2013-07-05)
+------------------
+
+- Fixed #3: Now {downKey down} won't be sent until the timeout has passed, in order to support the
+  alt and Windows modifiers.
 
 0.1.0 (2013-07-04)
 ------------------

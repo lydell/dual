@@ -156,11 +156,19 @@ class Dual {
 
 		isDown := false
 		subKeysDown := {}
-		down() {
+		down(forceDown=false) {
 			if (this.isDown == false) { ; Don't update any of this on OS simulated repeats.
 				this.isDown := true
 				this._timeDown := A_TickCount
 			}
+
+			; Skip the for loop below, which actually sends the key(s), if the timeout hasn't
+			; passed, in order to support modifiers that do something when released, such as the alt
+			; and Windows keys. `forceDown` is used by the comboKeys.
+			if (not forceDown and this.timeDown() < Dual.timeout) {
+				return
+			}
+
 			for index, key in this.key { ; (*)
 				; Let's say you've made j also a shift key. Pressing j would then cause the
 				; following: shift down, shift up, j down+up. Now let's say you hold down one of the
@@ -248,6 +256,7 @@ class Dual {
 					upKey.send()
 					upKey.alreadySend := true
 				} else {
+					downKey.down(true) ; Force down the downKey, in case the timeout hasn't passed.
 					downKey.combo := true
 				}
 			}
