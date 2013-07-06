@@ -52,9 +52,9 @@ class Dual {
 	modifiersDown(modifiers*) {
 		approvedModifiers := {}
 		for index, modifier in modifiers {
-			; Support custom {win} shortcut for either Windows key.
-			StringLower modifier, modifier
-			if (modifier == "win" and not GetKeyState("LWin") and not GetKeyState("RWin")) {
+			; Support custom {win} shortcut for either Windows key. Note that a single `=` means
+			; case insensitive comparison.
+			if (modifier = "Win" and not GetKeyState("LWin") and not GetKeyState("RWin")) {
 				return false
 			}
 
