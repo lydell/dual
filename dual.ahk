@@ -156,16 +156,16 @@ class Dual {
 
 		isDown := false
 		subKeysDown := {}
-		down(forceDown=false) {
+		down(sendActualKeyStrokes=true) {
 			if (this.isDown == false) { ; Don't update any of this on OS simulated repeats.
 				this.isDown := true
 				this._timeDown := A_TickCount
 			}
 
-			; Skip the for loop below, which actually sends the key(s), if the timeout hasn't
-			; passed, in order to support modifiers that do something when released, such as the alt
-			; and Windows keys. `forceDown` is used by the comboKeys.
-			if (not forceDown and this.timeDown() < Dual.timeout) {
+			; In order to support modifiers that do something when released, such as the alt and
+			; Windows keys, it is possible to skip the for loop below, which sends the actual key
+			; strokes.
+			if (not sendActualKeyStrokes) {
 				return
 			}
 
@@ -256,7 +256,8 @@ class Dual {
 					upKey.send()
 					upKey.alreadySend := true
 				} else {
-					downKey.down(true) ; Force down the downKey, in case the timeout hasn't passed.
+					; Force down the downKey, in case the timeout hasn't passed.
+					downKey.down(downKey.timeDown() < this.timeout)
 					downKey.combo := true
 				}
 			}
@@ -294,7 +295,10 @@ Dual_keydown:
 		return
 	}
 
-	downKey.down()
+	; Only send the actual key strokes if the timeout has passed, in order to support modifiers that
+	; do something when released, such as the alt and Windows keys. The comboKeys will force it
+	; down, if the are combined before the timeout has passed.
+	downKey.down(downKey.timeDown() >= Dual.timeout)
 
 	return
 
