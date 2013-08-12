@@ -283,7 +283,7 @@ comboKeys setting. For example, if you previously swapped the following keys lik
     (
     "
     a::b    b::c
-    c::a ; Comments are allowed, too!
+    c::a
     "
     )
 
@@ -349,6 +349,12 @@ Dual will hopefully be tested in the future, perhaps using [YUnit].
 
 Changelog
 =========
+
+0.2.0 (Unreleased)
+------------------
+
+- Comments are no longer allowed in the comboKeys setting. It prevented `;` from being used as a
+  comboKey, and it is not worth introducing escape rules.
 
 0.1.1 (2013-07-05)
 ------------------

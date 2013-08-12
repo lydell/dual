@@ -102,10 +102,6 @@ class Dual {
 		comboKeys := this.comboKeys
 		filteredComboKeys := {}
 
-		; Remove comments. `[^\n\r]` is used since the dot matches newlines, even though it
-		; shouldn't. Weird.
-		comboKeys := RegExReplace(comboKeys, "[ \t];[^\n\r]*", "")
-
 		; This parsing loop splits on whitespace.
 		Loop parse, comboKeys, %A_Space%%A_Tab%`n, `r
 		{
