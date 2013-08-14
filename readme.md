@@ -24,7 +24,7 @@ https://github.com/lydell/dual.git`) or, preferably, add it as a submodule (`git
 https://github.com/lydell/dual.git`).
 
 Then include the script into an AutoHotkey file of choice. That exposes the `Dual` class, which is
-used for configuration and setting up your dual-role keys. Example:
+used for configuration and setting up your dual-role keys.
 
     #Include dual/dual.ahk
     dual := new Dual
@@ -46,7 +46,7 @@ used for configuration and setting up your dual-role keys. Example:
     *j::
     *j UP::dual.combine("RWin", "n")
 
-You can use <sample.md> as a starting point.
+You can use [sample.ahk](sample.ahk) as a starting point.
 
 
 
@@ -104,7 +104,7 @@ when pressed in combination with some other key:
 For convenience, and to keep your setup DRY, you may pass `A_ThisHotkey`.
 
 You may optionally pass a settings object to set the same options as described under
-[Configuration](#configuration), but at key-level. Example:
+[Configuration](#configuration), but at key-level:
 
     *r::
     *r UP::dual.combine("LWin", A_ThisHotkey, {delay: 100})
@@ -120,9 +120,9 @@ The method is supposed to be called as such:
 
     *KeyName::dual.comboKey()
 
-That turns the key into a [_comboKey_](#combokey). See [Configuration](#configuration). It basically
-means that the key sends information to the dual-role keys when pressed, and then sends itself—so
-you won't even notice that a comboKey is comboKey.
+That turns the key into a [_comboKey_](#combokeys). It basically means that the key sends
+information to the dual-role keys when pressed, and then sends itself—so you won't even notice that
+a comboKey is comboKey.
 
 If you want a key to both to be a comboKey and remap it, pass the key you want to remap it to as a
 parameter. For example, if you previously swapped the following keys like so …
@@ -146,7 +146,7 @@ This way is also more reliable.
 --------------
 
 Let's you make a key into a comboKey without sending the key itself, like the `comboKey()` method
-does. Example:
+does.
 
     9::
         dual.combo()
@@ -197,7 +197,7 @@ tells the dual-role keys in question that they have been combined. The comboKey 
 so you won't even notice that it is a hotkey. Perfect, problem solved—the dual-role keys now know if
 they have been combined, and can therefore skip sending the upKey when released. Note that the dual-
 role keys are automatically combo keys. You should not add extra hotkeys to them to run the
-`Dual.comboKey()` function—in fact that results in a "duplicate hotkey" error in AutoHotkey.
+`comboKey()` method fact that results in a "duplicate hotkey" error in AutoHotkey.
 
 _timeout_
 ---------
@@ -309,7 +309,7 @@ _comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can b
     *a::
     *a UP::dual.comboKey()
 
-See <sample.md> for a starting point.
+See [sample.ahk](sample.ahk) for a starting point.
 
 Also note that the settings can be set per dual-role key. See the `combine()` method. This let's you
 fine-tune specific keys. After all, our fingers and the possible key combinations of the keyboard
