@@ -3,6 +3,15 @@ Dual_cleanKey(key) {
 	return RegExReplace(key, "i)^[#!^+<>*~$]+| up$", "")
 }
 
+Dual_send(string) {
+	global Dual_sentKeys
+	if (Dual_sentKeys) {
+		Dual_sentKeys.Insert(string)
+	} else {
+		SendInput {Blind}{%string%}
+	}
+}
+
 class Dual {
 	;;; Settings.
 	; They are described in detail in the readme. Remember to mirror the defaults there.
@@ -49,7 +58,7 @@ class Dual {
 		} else {
 			key := remappingKey
 		}
-		SendInput {Blind}{%key%}
+		Dual_send(key)
 	}
 
 	combo() {
@@ -166,10 +175,7 @@ class Dual {
 				; might not: The user can release it while holding the dual-role key.
 				if (this.subKeysDown[key] or not GetKeyState(key)) {
 					this.subKeysDown[key] := true
-					SendInput {Blind}{%key% down}
-					; SendLevel 1
-					; SetKeyDelay -1
-					; SendEvent {Blind}{%key% down}
+					Dual_send(key " down")
 				}
 			}
 		}
@@ -185,7 +191,7 @@ class Dual {
 				; that another identical key was already down by then. Or, `up()` might already have
 				; been called.
 				if (this.subKeysDown[key]) {
-					SendInput {Blind}{%key% up}
+					Dual_send(key " up")
 				}
 			}
 			this.subKeysDown := {}
@@ -194,7 +200,7 @@ class Dual {
 		send() {
 			this._lastUpTime := A_TickCount
 			for index, key in this.key { ; (*)
-				SendInput {Blind}{%key%}
+				Dual_send(key)
 			}
 		}
 
