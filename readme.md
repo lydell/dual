@@ -4,7 +4,7 @@ Overview
 Dual is an [AutoHotkey] script that lets you define [dual-role modifier keys][wikipedia-dual-role]
 easily. For example, combine the space bar and shift keys. It is heavily inspired by [BigCtrl].
 
-Dual is not just another script you download, autorun and forget. It is a tool you include and use,
+Dual is not just another script you download, auto-run and forget. It is a tool you include and use,
 perhaps in an already existing remapping script.
 
 It is currently quite stable and feature complete, but needs more testing.
@@ -23,19 +23,30 @@ use it with. Either download it manually, clone with git (`git clone
 https://github.com/lydell/dual.git`) or, preferably, add it as a submodule (`git submodule add
 https://github.com/lydell/dual.git`).
 
-Then include the script into the AutoHotkey file of choice. That exposes the `Dual` object, which is
-used for configuration, setting up your dual-role keys and finally launching them. Example:
+Then include the script into an AutoHotkey file of choice. That exposes the `Dual` class, which is
+used for configuration and setting up your dual-role keys. Example:
 
     #Include dual/dual.ahk
+    dual := new Dual
 
-    Dual.comboKeys .= " å ä ö" ; Configuration for Swedish.
+    ; Configure a setting.
+    dual.timeout := 400
 
-    Dual.set("LShift", "(") ; Steve Losh shift buttons.
-    Dual.set("RShift", ")")
-    Dual.set("Space", _, "RCtrl") ; BigCtrl-like.
-    Dual.set("j", "n", "RWin") ; Colemak rebinding and Windows key combination.
+    ; Steve Losh shift buttons.
+    *LShift::
+    *LShift UP::dual.combine(A_ThisHotkey, "(")
+    *RShift::
+    *RShift UP::dual.combine(A_ThisHotkey, ")")
 
-    Dual.launch()
+    ; BigCtrl-like.
+    *Space::
+    *Space UP::dual.combine("RCtrl", A_ThisHotkey)
+
+    ; Colemak rebinding and Windows key combination.
+    *j::
+    *j UP::dual.combine("RWin", "n")
+
+You can use <sample.md> as a starting point.
 
 
 
@@ -55,55 +66,104 @@ parenthesis won't be noticed as laggy, but putting modifiers on the home row mig
 using the QWERTY layout) asdfjkl; will appear on keyup, unlike the rest of the characters. It's up
 to you to weight to benefits against the pitfalls.
 
-Also see the [limitations](#limitations).
+Also see [Limitations](#limitations).
 
 
 
 API
 ===
 
-The `Dual` object exposes a few configuration properties, the methods mentioned below, the methods
-mentioned under [limitations](#limitations), as well as a few other methods and a few labels. While
-it is possible to use these extra methods and labels, it is not recommend, since they might change
-without warning.
-
 Note that all properties and methods that accepts keys expects keys from the [key list].
+
+The `Dual` class takes no parameters.
+
+    dual := new Dual
+
+Throughout the rest of the documentation, `dual` is assumed to be an instance of the `Dual` class.
 
 [key list]: http://www.autohotkey.com/docs/KeyList.htm
 
-`Dual.set(originalKey, upKey, downKey="")`
-------------------------------------------
+`dual.combine(downKey, upKey, settings=false)`
+------------------------------
 
 In a nutshell, a dual-role key sends one key when held down—called the "downKey"—and one when
-released—called the "upKey." The key you press on the keyboard is the originalKey.
+released—called the "upKey."
 
-For convenience, and to keep your setup DRY, you may pass an empty string as the upKey or downKey.
-In the example above, this is done by either passing the undefined variable `_` (which, in my
-opinion, looks nicer than passing a literal string (`""`), but watch out never to define the
-underscore! ;) ), or by omitting the last argument altogether (which has the empty string as default
-value). If you pass the empty string, the originalKey will be used for that argument instead. Thus,
-the above example is equivalent to:
+The method is supposed to be called as such:
 
-    Dual.set("LShift", "(", "LShift")
-    Dual.set("RShift", ")", "RShift")
-    Dual.set("Space", "Space", "RCtrl")
-    Dual.set("j", "n", "RWin")
+    *KeyName
+    *KeyName UP::dual.combine(…)
 
 The upKey and downKey may also be combinations of keys, by passing arrays. For example, you could
 make right alt put quotation marks around the cursor when pressed by itself, and a ctrl+shift key
 when pressed in combination with some other key:
 
-    Dual.set("RAlt", ["'", "'", "Left"], ["RCtrl", "RShift"])
+    *RAlt::
+    *RAlt UP::dual.combine(["RCtrl", "RShift"], ["'", "'", "Left"])
 
-`Dual.launch()`
----------------
+For convenience, and to keep your setup DRY, you may pass `A_ThisHotkey`.
 
-Run this method when you're done configuring and setting up dual-role keys. It wires all necessary
-hotkeys for you. Just remember that all `Dual`-related stuff, including `Dual.launch()` needs to be
-in the [auto-execute section]. While it might tempting to mix rebindings and `Dual.set()`:s, it
-won't work!
+You may optionally pass a settings object to set the same options as described under
+[Configuration](#configuration), but at key-level. Example:
 
-[auto-execute section]: http://www.autohotkey.com/docs/Scripts.htm#auto
+    *r::
+    *r UP::dual.combine("LWin", A_ThisHotkey, {delay: 100})
+
+An older version of Dual provided a method called `set()` instead of `combine()`, which set up the
+keys for you, using the `Hotkey` command. That was perhaps a bit more convenient (you didn't have to
+write the key name twice for instance), but caused problems with other hotkeys.
+
+`dual.comboKey(remappingKey="")`
+--------------------------------
+
+The method is supposed to be called as such:
+
+    *KeyName::dual.comboKey()
+
+That turns the key into a [_comboKey_](#combokey). See [Configuration](#configuration). It basically
+means that the key sends information to the dual-role keys when pressed, and then sends itself—so
+you won't even notice that a comboKey is comboKey.
+
+If you want a key to both to be a comboKey and remap it, pass the key you want to remap it to as a
+parameter. For example, if you previously swapped the following keys like so …
+
+    a::b
+    b::c
+    c::a
+
+… you need to change them into this:
+
+    *a::dual.comboKey("b")
+    *b::dual.comboKey("c")
+    *c::dual.comboKey("a")
+
+An older version of Dual provided a setting called `Dual.comboKeys` instead of this method, which
+set up the comboKeys for you, using the `Hotkey` command. That is not possible anymore, because it
+depended on the `set()` method which also doesn't exist anymore (see the `combine()` method above).
+This way is also more reliable.
+
+`dual.combo()`
+--------------
+
+Let's you make a key into a comboKey without sending the key itself, like the `comboKey()` method
+does. Example:
+
+    9::
+        dual.combo()
+        SendInput (){Left}
+        return
+
+In fact, the `comboKey()` method (called without parameter) is roughly equivalent to:
+
+    dual.combo()
+    SendInput {Blind}%A_ThisHotkey%
+
+`dual.Send(string)`
+-------------------
+
+`dual.Send()` works exactly like the `Send` command, except that it temporarily releases any dual-
+role keys that are down for the moment first. There is also `dual.SendInput()`, `dual.SendEvent()`,
+`dual.SendPlay()` and `dual.SendRaw()`. See [Limitations](#limitations) for usage of this method.
 
 
 
@@ -112,6 +172,9 @@ Configuration
 
 While dual-role keys might sound trivial to implement, there are some pretty complicated details to
 work with. Only _using_ dual-role keys is really easy.
+
+_comboKeys_
+-----------
 
 What happens in essence when you press a dual-role key, is the following:
 
@@ -128,23 +191,27 @@ be sent when releasing the dual-role key. For example, if you have combined spac
 have pressed space+f, you'd expect an F, but in reality you get an F followed by a space. So the
 script needs a way of knowing if you have combined a dual-role key with some other key.
 
-That is solved by what I call **"comboKeys."** All comboKeys get hotkeys assigned to them, which
-checks if any of the dual-role keys are down. If so, they tell the dual-role keys in question that
-they have been combined. The comboKey then sends itself, so you won't even notice that it is a
-hotkey. Perfect, problem solved—the dual-role keys now know if they have been combined, and can
-therefore skip sending the upKey when released. The comboKeys can be set via the `Dual.comboKeys`
-property. Also, the dual-role keys are automatically combo keys. However, don't worry if they're
-also listed in the comboKeys setting—that is taken care of.
+That is solved by what I call **"comboKeys."** A comboKey is a key that you have assigned a hotkey
+to that runs the `comboKey()` method, which checks if any of the dual-role keys are down. If so, it
+tells the dual-role keys in question that they have been combined. The comboKey then sends itself,
+so you won't even notice that it is a hotkey. Perfect, problem solved—the dual-role keys now know if
+they have been combined, and can therefore skip sending the upKey when released. Note that the dual-
+role keys are automatically combo keys. You should not add extra hotkeys to them to run the
+`Dual.comboKey()` function—in fact that results in a "duplicate hotkey" error in AutoHotkey.
 
-But, wait! Does that mean that the downKey only can be combined with a specific set of keys? That
-kinda sucks! Well, yes it does. Fortunately, there is a way to deal with this, so that the downKey
-can be combined with _any_ key. Phew!
+_timeout_
+---------
+
+But, wait! Does the above mean that the downKey only can be combined with a specific set of keys—the
+comboKeys? That kinda sucks! Well, yes it does. Fortunately, there is a way to deal with this, so
+that the downKey can be combined with _any_ key (however a little bit more limited than with the
+comboKeys—why bother with comboKeys at all otherwise?). Phew!
 
 Let me introduce the **"timeout"**. When the dual-role key has been held longer than the timeout,
 the upKey won't be sent. When you think about, don't you always hold modifier keys longer than you
 press character keys? So if you want to combine a downKey with a non-comboKey, just make sure that
 you hold down the dual-role key longer than the timeout (which you probably do anyway). The timeout
-can be set via the `Dual.timeout` property.
+can be set via the `timeout` property.
 
 According to the above paragraph, if you combine a dual-role key with some other, non-comboKey
 within the timeout, that would result in both the combination _and_ the upKey. Right, I've already
@@ -155,7 +222,7 @@ The timeout actually takes care of one more thing.
 In the beginning of this section, I said that the first thing that happens when you press down a
 dual-role key is that {downKey down} is sent. That is actually not true. {downKey down} is not sent
 until the timeout has passed. That's why only the upKey is sent, and the combination does not occur,
-as described above. But why? Well, here we go:
+as described above. But why?
 
 As mentioned under [Pros & Cons](#pros--cons), what makes it possible to combine a modifier key with
 another key is that the modifier only does something when held down. However, that is not true for
@@ -181,26 +248,27 @@ The timeout also has yet another positive effect: If you ever change your mind h
 keyboard shortcut—that is, when holding a modifier down—you can just release it without worrying
 about having to clean up the upKey that was just sent.
 
-* * *
+_delay_
+-------
 
 Now, let's leave the timeout and move on. When typing quickly, sometimes you might press down
 several keys simultaneously for a short period of time. If one of them is a dual-role key, you're in
 trouble. For example, let's say you've combined the space and shift keys, and you want to type
-"Hello world!". You type this really quickly, so that the space bar happens to be down when you type
-"w". That would produce "HelloWorld!".
+"Hello world!". If you type this really quickly, so that the space bar happens to be down when you
+type "w", the result would be "HelloWorld!".
 
 The solution to this problem lies in its description. "Sometimes you might press down several keys
 simultaneously for a _short period of time._" Thus, let me introduce the **"delay."** It is in
 relationship with the comboKeys. Now, the comboKeys have one more check to do. As before, they check
-if any dual-role keys are down. If so, they check how long time have elapsed since the were pressed
-down. If that time is shorter than the delay, release the downKey of the dual-role key in question
-and send its upKey instead. Otherwise tell the dual-role key that it has been combined with another
-key, just as before. Again, the scripts _work_ with any key combination. But common keys better be
-set as comboKeys to reduce mistakes. The delay can be set via the `Dual.delay` property.
+if any dual-role keys are down. If so, they check how long time have elapsed since they were pressed
+down. If that time is shorter than the delay, the downKey of the dual-role key in question is
+released and its upKey sent instead. Otherwise the dual-role key is told that it has been combined
+with another key, just as before. Again, the dual-role keys _work_ with any key combination. But
+common keys better be set as comboKeys to reduce mistakes. The delay can be set via the `delay`
+property.
 
-To test the timeout and delay, I recommend setting both of them to long times, for example 3 seconds
-and 1 second, respectively. Play with it and you'll quickly get the hang of it. Then tweak the
-values so that you never ever have to think about it again.
+_doublePress_
+-------------
 
 Lastly, we've got the **"doublePress."** Usually, keys repeat when being held down (if your OS does
 so). However, a dual-role key repeats its downKey when held, not the upKey. For example, if you've
@@ -208,133 +276,93 @@ combined the space and shift keys, holding down the space bar won't produce a se
 perhaps used as indentation. What now?
 
 For this issue, a doublePress is used. Press the dual-role key, release it and press it again,
-within the doublePress time. If you continue to hold it, the upKey will be repeated. Now, the
-comboKeys come in handy yet a time. If you type "bob" really quickly, and "b" is a dual-role key,
-and you keep holding "b" the last time, "b" will actually start to repeat, even though another key
-was pressed in-between the two "b" presses. That's not really a double press, right? However, if "o"
-is a comboKey, that won't happen. The doublePress time can be set via the `Dual.doublePress`
-property.
+within the doublePress time. The doublePress time can be set via the `doublePress` property. If you
+continue to hold the dual-role key, the upKey will be repeated.
+
+Now, the comboKeys come in handy yet a time. If you type "bob" really quickly, and "b" is a dual-
+role key, and you keep holding "b" the last time, "b" will actually start to repeat, even though
+another key was pressed in-between the two "b" presses. That's not really a double press, right?
+However, if "o" is a comboKey, that won't happen.
+
+Summary and defaults
+--------------------
 
 Phew! That was a lot to take in. But it's not that complicated when you actually use the dual-role
-keys. It's just handy to know while tweaking the settings, so you never have to be bothered by it
-again. Now, time for some recap and examples. The default values are also shown below.
+keys. It's just handy to know while tweaking the settings, so you never have to be bothered again.
+Now, time for some recap and examples. The default values are also shown below.
 
-    Dual.comboKeys :=
-    (
-    "
-    a b c d e f g h i j k l m n o p q r s t u v w x y z
-    0 1 2 3 4 5 6 7 8 9
-    . , `; `` ' / \ [ ] - =
-    Up Down Left Right Home End PgUp PgDn Insert Delete Backspace Space Enter Tab
-    F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12
-    "
-    )
-    Dual.timeout := 300
-    Dual.delay := 70
-    Dual.doublePress := 200
+    dual.timeout     := 300
+    dual.delay       := 70
+    dual.doublePress := 200
 
-`Dual.comboKeys` is a whitespace delimited string of keys that enhance the accuracy of the dual-role
-keys. To list space, type in "Space", rather than a literal space. Same thing for tab. Tip: Rather
-than reassigning this setting, it might be easier to append to it. For example, Swedes might want to
-do `Dual.comboKeys .= " å ä ö"`.
-
-`Dual.delay` is the number of milliseconds that you must hold a dual-role key in order for it to
+`dual.delay` is the number of milliseconds that you must hold a dual-role key in order for it to
 count as a combination with another key (comboKeys only, though).
 
-`Dual.timeout` is the number of milliseconds after which the downKey starts to be sent, and the
+`dual.timeout` is the number of milliseconds after which the downKey starts to be sent, and the
 upKey won't be sent.
 
-`Dual.doublePress` is the maximum number of milliseconds between a release of a dual-role key and
-its next press that can elapse and still be called a doublePress.
+`dual.doublePress` is the maximum number of milliseconds that can elapse between a release of a
+dual-role key and its next press and still be called a doublePress.
+
+_comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can be set as such:
+
+    *a::
+    *a UP::dual.comboKey()
+
+See <sample.md> for a starting point.
+
+Also note that the settings can be set per dual-role key. See the `combine()` method. This let's you
+fine-tune specific keys. After all, our fingers and the possible key combinations of the keyboard
+are all different.
+
+To test the timeout and delay, I recommend setting both of them to long times, for example 3 seconds
+and 1 second, respectively. Play with it and you'll quickly get the hang of it. Then tweak the
+values so that you never ever have to think about them again.
 
 
 
 Limitations
 ===========
 
-For this script to work with existing remappings and hotkeys you might have, some work is
-required. Both solutions feel a bit hacky, but seem to work pretty well. I would gladly accept
-better solutions.
+The `&` combiner
+----------------
 
-Remappings
-----------
+Consider the following example:
 
-If you want a key to both to be a comboKey and remap it, you have to put the remapping inside the
-comboKeys setting. For example, if you previously swapped the following keys like so …
+    *j::
+    *j UP::dual.combine("F12", A_ThisHotkey)
 
-    a::b
-    b::c
-    c::a
+    F12 & d::SendInput 1337
 
-… you need to change it to this:
+Pressing d while holding down j should produce 1337, right? I wish it did. In reality, the hotkey
+isn't triggered at all. Any already existing hotkeys using the `&` combiner could be rewritten like
+the following, to be able to be activated by a dual-role key:
 
-    Dual.comboKeys .=
-    (
-    "
-    a::b
-    b::c
-    c::a
-    "
-    )
-
- Alternatively, you can format it in other ways, if you like:
-
-    Dual.comboKeys .=
-    (
-    "
-    a::b    b::c
-    c::a
-    "
-    )
-
-You can of course mix regular comboKeys and such remappings.
-
-You might have noticed that "a", "b", and "c" already are comboKeys by default, and now we're adding
-them again! Don't worry, only the last occurrence is used, allowing you to conveniently append the
-setting as in the example.
-
-Hotkeys
--------
-
-Modifiers on dual-role keys **will not** trigger any of your AHK hotkeys, unless you modify them.
-There are two helper methods to the rescue.
-
-### `Dual.modifiersDown(modifiers*)` ###
-
-Checks if the specified `modifiers`—and those only—are down. It is used to mimic native AHK
-behavior, for example `modifiersDown("Ctrl", "Shift")` mimics `^+`. Note that `modifiers` does not
-_have_ to be traditional modifiers like Control and Shift. You can use any keys.
-
-### `Dual.send(str)` ###
-
-Like `SendInput %str%`, but releases any modifiers first. (Puts them back down afterwards.)
-
-### Example ###
-
-If you had the following hotkeys defined …
-
-    ^+a::Send 1337
-    #n::Run Notepad.exe
-    F13 & b::Send ^c
-
-… you need to change them into:
-
-    ^+a::
-    #If Dual.modifiersDown("Ctrl", "Shift")
-    a::Dual.send("1337")
-    #If ; Optional, but makes it easier to read and maintain, in my opinion.
-
-    #n::
-    #If Dual.modifiersDown("Win") ; {Win} is a shortcut to easily target either of the Windows keys.
-    n::Run Notepad.exe
+    #If GetKeyState("F12")
+    d::SendInput 1337
     #If
 
-    F13 & b::
-    #If Dual.modifiersDown("F13")
-    b::Dual.send("^c")
-    #If
+Which isn't that bad though.
 
-It is a bit clunky, I know, but at least it works. Again, I would really like a better solution.
+Modifier hotkeys that send
+--------------------------
+
+Consider the following example:
+
+    *j::
+    *j UP::dual.combine("RShift", A_ThisHotkey)
+
+    +d::Send1337
+
+Pressing d while holding down j should produce 1337, right? I wish it did. In reality, !##& is sent,
+just as if `{Blind}` was used. Any already existing hotkeys that involves modifiers and that **send
+input** could be rewritten like the following, to send the input as expected:
+
+    +d::dual.Send("1337")
+
+`dual.Send()` works exactly like the `Send` command, except that it temporarily releases any dual-
+role keys that are down for the moment first. There is also `dual.SendInput()`, `dual.SendEvent()`,
+`dual.SendPlay()` and `dual.SendRaw()`. Simply prepend your Send* commands with "dual.".
 
 
 
@@ -350,11 +378,27 @@ Dual will hopefully be tested in the future, perhaps using [YUnit].
 Changelog
 =========
 
+0.3.0 (2013-08-14)
+------------------
+
+- Fixed: The dual-role keys now trigger other hotkeys out of the box (except hotkeys using the `&`
+  combiner), with no changes to the other hotkeys required. They also work more reliably.
+- Improved: Re-implemented the functionality of `Dual.send()` way more robustly.
+- Changed: Replaced `Dual.send()` with the `SendInput()`, `SendEvent()`, `SendPlay()`, `SendRaw()`
+  and `Send()` methods. (Backwards incompatible change.)
+- Replaced the `Dual.set()` with the `combine()` method, in order to fix the above. (Backwards
+  incompatible change.)
+- Replaced the `comboKeys` setting with the `comboKey()` (and `combo()`) method, because of the
+  above. (Backwards incompatible change.)
+- Added: Per-key settings.
+- Changed: The script now exports the class `Dual` itself, not an instance of the class. (Backwards
+  incompatible change.)
+
 0.2.0 (Unreleased)
 ------------------
 
 - Comments are no longer allowed in the comboKeys setting. It prevented `;` from being used as a
-  comboKey, and it is not worth introducing escape rules.
+  comboKey, and it is not worth introducing escape rules. (Backwards incompatible change.)
 
 0.1.1 (2013-07-05)
 ------------------
