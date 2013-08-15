@@ -315,9 +315,28 @@ Also note that the settings can be set per dual-role key. See the `combine()` me
 fine-tune specific keys. After all, our fingers and the possible key combinations of the keyboard
 are all different.
 
+Tips
+----
+
 To test the timeout and delay, I recommend setting both of them to long times, for example 3 seconds
 and 1 second, respectively. Play with it and you'll quickly get the hang of it. Then tweak the
 values so that you never ever have to think about them again.
+
+Here's a method to find a good delay:
+
+Find a pair of characters on your keyboard that you type really quickly in succession. Combine the
+first of those two characters with a modifier M. Make sure that the other character is a comboKey,
+and that an action A is triggered when modified by M. Then type
+words that contain the two characters in succession. If action B is triggered when typing those words, you need more delay. Then also try to
+activate other hotkeys that you actually would like to be triggered. If they don't, you have too
+much delay. If you're really unlucky, you can't satisfy both at the same time.
+
+Example: I type "re" very quickly in QWERTY. So I made "e" a dual-role key, combining it with the
+Windows key. (I also made sure that "r" is a comboKey.) I then typed words like "h**er**e" and
+"th**er**e". When I had too little delay, the Run prompt popped up while typing (`#r` is the default
+shortcut for opening it). When I had too much delay, I wasn't able to activate other Windows
+shortcuts, such as `#m` (which minimizes all windows), because I typed the shortcut too quickly:
+dual thought that I accidentally made a combination. After I while I found a balance.
 
 
 
