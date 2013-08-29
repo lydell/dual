@@ -397,6 +397,12 @@ Dual will hopefully be tested in the future, perhaps using [YUnit].
 Changelog
 =========
 
+0.3.1 (2013-08-29)
+------------------
+
+- Fixed: The comboKeys sometimes failed to force down downKeys. They now force them down much more
+  forcefully.
+
 0.3.0 (2013-08-14)
 ------------------
 

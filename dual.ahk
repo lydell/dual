@@ -71,8 +71,7 @@ class Dual {
 					upKey.send()
 					upKey.alreadySend := true
 				} else {
-					; Force down the downKey, in case the timeout hasn't passed.
-					downKey.down(downKey.timeDown() < keys.timeout)
+					downKey.down(true) ; Force it down, no matter what.
 					downKey.combo := true
 				}
 			}
