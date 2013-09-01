@@ -23,7 +23,7 @@ use it with. Either download it manually, clone with git (`git clone
 https://github.com/lydell/dual.git`) or, preferably, add it as a submodule (`git submodule add
 https://github.com/lydell/dual.git`).
 
-Then include the script into an AutoHotkey file of choice. That exposes the `Dual` class, which is
+Then include the script into the AutoHotkey file you chose. That exposes the `Dual` class, which is
 used for configuration and setting up your dual-role keys.
 
     #Include dual/dual.ahk
@@ -59,12 +59,22 @@ by itself, and it produces nothing? Let it do something instead!
 You can also use Dual to put modifier keys in more convenient places, like on the home row. I'm
 currently experimenting with that myself.
 
-The bad part is that the upKey has to be, of course, sent when the key is _released_ (on keyup),
-instead of immediately when it is pressed down (on keydown), which might feel a bit laggy. That is a
-bigger problem for character keys, than for modifier keys; Making the shift buttons also produce
-parenthesis won't be noticed as laggy, but putting modifiers on the home row might, since (when
-using the QWERTY layout) asdfjkl; will appear on keyup, unlike the rest of the characters. It's up
-to you to weight to benefits against the pitfalls.
+Normally, all keys send their characters when pressed down. Dual-role keys, on the other hand, sends
+their characters when the key is _released_, since they act as modifiers when pressed down. This
+might feel a bit laggy. If you make the shift buttons also produce parenthesis, you probably won't
+notice it, because you are not used to that the shift keys actually do something when pressed on
+their own. But if you put modifiers on the home row you probably will, since this time you _are_
+used to seeing the characters pop up immediately on the screen. Moreover, the characters of the
+other rows still do, so you will constantly _see_ the difference too, not just remember it.
+
+As I said, I currently experiment with modifiers on the home row. My first reaction was: "Ugh, that
+looks terrible!" It felt like typing in the terminal with a somewhat bad ssh connection. Initially
+that slowed me down. After a while, though, I learned to ignore the lag, just typing on like before.
+After yet a while, I didn't think much about it any longer. So, for me, having the modifiers in
+really convenient spots is definitely worth the lag.
+
+Everyone might not stand the lag, though. If so, simply don't make any character keys into dual-role
+keys. I can still recommend making the modifier keys and space bar into dual-role keys to anyone.
 
 Also see [Limitations](#limitations).
 
@@ -73,7 +83,7 @@ Also see [Limitations](#limitations).
 API
 ===
 
-Note that all properties and methods that accepts keys expects keys from the [key list].
+Note that all methods that accepts keys expect keys from the [key list].
 
 The `Dual` class takes no parameters.
 
@@ -84,7 +94,7 @@ Throughout the rest of the documentation, `dual` is assumed to be an instance of
 [key list]: http://www.autohotkey.com/docs/KeyList.htm
 
 `dual.combine(downKey, upKey, settings=false)`
-------------------------------
+----------------------------------------------
 
 In a nutshell, a dual-role key sends one key when held down—called the "downKey"—and one when
 released—called the "upKey."
@@ -109,6 +119,8 @@ You may optionally pass a settings object to set the same options as described u
     *r::
     *r UP::dual.combine("LWin", A_ThisHotkey, {delay: 100})
 
+Key-level settings have been invaluable for me when experimenting with modifiers on the home row.
+
 An older version of Dual provided a method called `set()` instead of `combine()`, which set up the
 keys for you, using the `Hotkey` command. That was perhaps a bit more convenient (you didn't have to
 write the key name twice for instance), but caused problems with other hotkeys.
@@ -124,14 +136,14 @@ That turns the key into a [_comboKey_](#combokeys). It basically means that the 
 information to the dual-role keys when pressed, and then sends itself—so you won't even notice that
 a comboKey is comboKey.
 
-If you want a key to both to be a comboKey and remap it, pass the key you want to remap it to as a
+If you want a key to be a comboKey _and_ remap it, pass the key you want to remap it to as a
 parameter. For example, if you previously swapped the following keys like so …
 
     a::b
     b::c
     c::a
 
-… you need to change them into this:
+… you could change it like so:
 
     *a::dual.comboKey("b")
     *b::dual.comboKey("c")
@@ -145,8 +157,8 @@ This way is also more reliable.
 `dual.combo()`
 --------------
 
-Let's you make a key into a comboKey without sending the key itself, like the `comboKey()` method
-does.
+Let's you make a key into a comboKey without sending the key itself, in contrast to the `comboKey()`
+method.
 
     9::
         dual.combo()
@@ -162,7 +174,7 @@ In fact, the `comboKey()` method (called without parameter) is roughly equivalen
 -------------------
 
 `dual.Send()` works exactly like the `Send` command, except that it temporarily releases any dual-
-role keys that are down for the moment first. There is also `dual.SendInput()`, `dual.SendEvent()`,
+role keys that are down for the moment first. There are also `dual.SendInput()`, `dual.SendEvent()`,
 `dual.SendPlay()` and `dual.SendRaw()`. See [Limitations](#limitations) for usage of this method.
 
 
@@ -176,7 +188,7 @@ work with. Only _using_ dual-role keys is really easy.
 _comboKeys_
 -----------
 
-What happens in essence when you press a dual-role key, is the following:
+What happens, in essence, when you press a dual-role key, is the following:
 
 You press the dual-role key down. That causes {downKey down} to be sent. You hold the dual-role key
 for a while. During that time you might press other keys, which then might be modified, if your
@@ -326,10 +338,10 @@ Here's a method to find a good delay:
 
 Find a pair of characters on your keyboard that you type really quickly in succession. Combine the
 first of those two characters with a modifier M. Make sure that the other character is a comboKey,
-and that an action A is triggered when modified by M. Then type
-words that contain the two characters in succession. If action B is triggered when typing those words, you need more delay. Then also try to
-activate other hotkeys that you actually would like to be triggered. If they don't, you have too
-much delay. If you're really unlucky, you can't satisfy both at the same time.
+and that an action A is triggered when modified by M. Then type words that contain the two
+characters in succession. If action B is triggered when typing those words, you need more delay.
+Then also try to activate other hotkeys that you actually would like to be triggered. If they don't,
+you have too much delay. If you're really unlucky, you can't satisfy both at the same time.
 
 Example: I type "re" very quickly in QWERTY. So I made "e" a dual-role key, combining it with the
 Windows key. (I also made sure that "r" is a comboKey.) I then typed words like "h**er**e" and
