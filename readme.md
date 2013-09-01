@@ -397,6 +397,15 @@ Dual will hopefully be tested in the future, perhaps using [YUnit].
 Changelog
 =========
 
+0.3.2 (2013-09-01)
+------------------
+
+- Fixed: Dual-role keys typed rapidly in succession were output backwards. For example, you wanted
+  to type fd but got df.
+- Improved: If you press down a dual-role key, then another, and then release the first, the full
+  press of the first dual-role key is always a no-op.
+- Both of the above are explained in detail in the source code.
+
 0.3.1 (2013-08-29)
 ------------------
 

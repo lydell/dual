@@ -61,21 +61,50 @@ class Dual {
 		Dual_send(key)
 	}
 
-	combo() {
+	; `justReleasedDownKeyTimeDown` is not documented in the readme, since it is only used internally.
+	combo(justReleasedDownKeyTimeDown=-1) {
+		shorterTimeDownKeys := []
 		for originalKey, keys in this.keys {
 			upKey := keys.upKey
 			downKey := keys.downKey
 			if (downKey.isDown) {
-				if (downKey.timeDown() < keys.delay) {
-					downKey.up()
-					upKey.send()
-					upKey.alreadySend := true
+				downKeyTimeDown := downKey.timeDown()
+				withinDelay := (downKeyTimeDown < keys.delay)
+				if (downKeyTimeDown < justReleasedDownKeyTimeDown) {
+					; Let's say you've combined f with shift and d with control. You press down f,
+					; and then d, as to use a shift-control shortcut. However, you change your mind:
+					; You want to to use just a control shortcut. So you release f. Even if the
+					; timout has not passed, we do not want the upKey of f to be sent now, causing
+					; control-f in effect (you still hold down d). That would be weird: It's like
+					; you've pressed the shortcut backwards, f-control, and it still works! So if
+					; there is at least one other dual-role key that has been down for a shorter
+					; period of time than a just released dual-role key, return `false` to indicate
+					; that the upKey of the just released dual-role key shouldn't be sent.
+					if (not withinDelay) {
+						; However, notice the `not withinDelay` check above. When you released f
+						; above, what if the delay of d hasn't passed yet? That means that you
+						; likely wanted to type fd, and typed that very quickly. You pressed down f,
+						; and before even releasing f you pressed d, which means that f was released
+						; while d was down. That usually means either control-f, or, if the delay
+						; hasn't passed, df. Therefore, in that case, we should _not_ return
+						; `false`. We _want_ the upKey of the just released dual-role to be sent.
+						return false
+					}
+					; Instead, we collect the keys of the dual-role key that has been down for a
+					; shorter period of time than the just released dual-role key (d in the above
+					; example). These will be returned later on, so that they can be sent _after_
+					; the upKey of the just released dual-role key (f in the above example), which
+					; finally sends fd as we wanted.
+					shorterTimeDownKeys.Insert(keys)
+				} else if (withinDelay) {
+					this.abortDualRole(keys)
 				} else {
 					downKey.down(true) ; Force it down, no matter what.
 					downKey.combo := true
 				}
 			}
 		}
+		return shorterTimeDownKeys
 	}
 
 	SendInput(string) {
@@ -125,6 +154,16 @@ class Dual {
 		for index, downKey in temporarilyReleasedKeys {
 			downKey.down()
 		}
+	}
+
+	; Releases a dual-role key that is held down, and sends its upKey, so that it behaves as if it
+	; was a normal key. In other words, its dual nature is aborted.
+	abortDualRole(keys) {
+		downKey := keys.downKey
+		upKey := keys.upKey
+		downKey.up()
+		upKey.send()
+		upKey.alreadySend := true
 	}
 
 	; Note that a key might mean a combination of many keys, however it is referred to as if it was
@@ -260,11 +299,23 @@ class Dual {
 
 		downKey.up()
 
+		; Determine if the upKey should be sent.
 		if (not downKey.combo
 			and (downKeyTimeDown < keys.timeout or keys.timeout == 0)
 			and not upKey.alreadySend) {
-			this.combo() ; Dual-role keys are automatically comboKeys.
-			upKey.send()
+			; Dual-role keys are automatically comboKeys.
+			shorterTimeDownKeys := this.combo(downKeyTimeDown)
+			; At this point, the upKey should be sent, mostly. However, there is one exception,
+			; explained in `combo()`.
+			if (shorterTimeDownKeys != false) { ; The exception referred to above.
+				upKey.send()
+				; The call of `combo()` above might call `abortDualRole()` for some other dual-role
+				; keys, before the upKey was sent in the line above. However, sometimes that needs
+				; to been done _after_ the upKey was sent. See `combo()` for an explaination.
+				for index, keys in shorterTimeDownKeys {
+					this.abortDualRole(keys)
+				}
+			}
 		}
 
 		downKey.combo     := false
