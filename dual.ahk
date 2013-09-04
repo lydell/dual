@@ -256,7 +256,7 @@ class Dual {
 
 		timeSinceLastUp := upKey.timeSinceLastUp()
 		if (timeSinceLastUp != false
-			and timeSinceLastUp < keys.doublePress ; (*1)
+			and timeSinceLastUp <= keys.doublePress ; (*1)
 			and Dual.cleanKey(A_PriorHotkey) == Dual.cleanKey(A_ThisHotkey)) { ; (*2)
 			upKey.repeatMode  := true
 			upKey.alreadySend := true
