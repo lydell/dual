@@ -26,13 +26,13 @@ class Dual {
 		this[keyState](keys, currentKey, lastKey)
 	}
 
-	comboKey(remappingKey="") {
+	comboKey(remappingKey=false) {
 		this.combo()
 
-		if (remappingKey == "") {
-			key := Dual.cleanKey(A_ThisHotkey)
-		} else {
+		if (remappingKey) {
 			key := remappingKey
+		} else {
+			key := Dual.cleanKey(A_ThisHotkey)
 		}
 		Dual.sendInternal(key)
 	}
@@ -52,7 +52,7 @@ class Dual {
 					; You want to to use just a control shortcut. So you release f. Even if the
 					; timout has not passed, we do not want the upKey of f to be sent now, causing
 					; control-f in effect (you still hold down d). That would be weird: It's like
-					; you've pressed the shortcut backwards, f-control, and it still works! So if
+					; you've pressed the shortcut backwards, f+control, and it still works! So if
 					; there is at least one other dual-role key that has been down for a shorter
 					; period of time than a just released dual-role key, return `false` to indicate
 					; that the upKey of the just released dual-role key shouldn't be sent.
@@ -62,7 +62,7 @@ class Dual {
 						; above, what if the delay of d hasn't passed yet? That means that you
 						; likely wanted to type fd, and typed that very quickly. You pressed down f,
 						; and before even releasing f you pressed d, which means that f was released
-						; while d was down. That usually means either control-f, or, if the delay
+						; while d was down. That usually means either control+f, or, if the delay
 						; hasn't passed, df. Therefore, in that case, we should _not_ return
 						; `false`. We _want_ the upKey of the just released dual-role to be sent.
 					}
@@ -81,6 +81,15 @@ class Dual {
 			}
 		}
 		return shorterTimeDownKeys
+	}
+
+	modifier(remappingKey=false) {
+		if (remappingKey) {
+			key := remappingKey
+		} else {
+			key := A_ThisHotkey
+		}
+		this.combine(key, key, {delay: 0, timeout: 0, doublePress: -1})
 	}
 
 	SendInput(string) {
@@ -258,6 +267,7 @@ class Dual {
 
 		timeSinceLastUp := upKey.timeSinceLastUp()
 		if (timeSinceLastUp != false
+			and keys.doublePress != -1
 			and timeSinceLastUp <= keys.doublePress ; (*1)
 			and Dual.cleanKey(lastKey) == Dual.cleanKey(currentKey)) { ; (*2)
 			upKey.repeatMode  := true
@@ -276,7 +286,7 @@ class Dual {
 		; Only send the actual key strokes if the timeout has passed, in order to support modifiers
 		; that do something when released, such as the alt and Windows keys. The comboKeys will
 		; force the downKey down, if they are combined before the timeout has passed.
-		downKey.down(downKey.timeDown() >= keys.timeout)
+		downKey.down(keys.timeout != -1 and downKey.timeDown() >= keys.timeout)
 	}
 
 	keyup(keys, currentKey, lastKey) {
@@ -289,7 +299,7 @@ class Dual {
 
 		; Determine if the upKey should be sent.
 		if (not downKey.combo
-			and (downKeyTimeDown < keys.timeout or keys.timeout == 0)
+			and (downKeyTimeDown < keys.timeout or keys.timeout == -1)
 			and not upKey.alreadySend) {
 			; Dual-role keys are automatically comboKeys.
 			shorterTimeDownKeys := this.combo(downKeyTimeDown)

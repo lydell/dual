@@ -120,8 +120,8 @@ An older version of Dual provided a method called `set()` instead of `combine()`
 keys for you, using the `Hotkey` command. That was perhaps a bit more convenient (you didn't have to
 write the key name twice for instance), but caused problems with other hotkeys.
 
-`dual.comboKey(remappingKey="")`
---------------------------------
+`dual.comboKey(remappingKey=false)`
+-----------------------------------
 
 The method is supposed to be called as such:
 
@@ -165,6 +165,46 @@ In fact, the `comboKey()` method (called without parameter) is roughly equivalen
     dual.combo()
     SendInput {Blind}%A_ThisHotkey%
 
+`dual.modifier(remappingKey=false)`
+-----------------------------------
+
+The method is supposed to be called as such:
+
+    *ModifierName
+    *ModifierName UP::dual.modifier()
+
+Let's say you want to press control+shift+a. You press down shift and then control, but then change
+your mind: You only want to press control+a. So you release shift and then press a. No problems.
+
+Now, let's say you had combined d and shift, and used that for the above. When you release d
+(shift), and you do that before its timeout has passed, d will be sent, causing control+d!
+
+You can solve this edge case by using the following:
+
+    *LCtrl::
+    *LCtrl UP::
+    *RCtrl::
+    *RCtrl UP::dual.modifier()
+
+You can optionally remap just like the `comboKey()` method.
+
+Note that if _only_ normal modifiers or _only_ dual-role keys are involved, this issue can never
+occur.
+
+This method also fixes another edge case. I don't think it's very useful, but it's there for
+consistency. If you hold down for example d and then press a modifier, d will be sent, and it won't
+start/continue to repeat. However, if d is a dual-role key, d would be modified. For example, if the
+modifier in question is shift, D would be sent. That's like doing it backwards, d+shift, and it
+still works! `dual.modifier()` takes care of this too.
+
+Implementation note: This method actually turns things into dual-role keys with the same downKey and
+upKey! The above example is actually equivalent to:
+
+    *LCtrl::
+    *LCtrl UP::
+    *RCtrl::
+    *RCtrl UP::dual.combine(A_ThisHotkey, A_ThisHotkey, {delay: 0, timeout: 0, doublePress: -1})
+
 `dual.Send(string)`
 -------------------
 
@@ -183,14 +223,16 @@ configuration.
 
     settings := {delay: 70, timeout: 300, doublePress: 200}
 
-`delay` is the number of milliseconds that you must hold a dual-role key in order for it to
-count as a combination with another key (comboKeys only, though).
+`delay` is the number of milliseconds that you must hold a dual-role key in order for it to count as
+a combination with another key (comboKeys only, though). Set it to `0` to turn off the feature (of
+course).
 
 `timeout` is the number of milliseconds after which the downKey starts to be sent, and the
-upKey won't be sent.
+upKey won't be sent. Set it to `-1` to turn the feature off—to never timeout.
 
-`doublePress` is the maximum number of milliseconds that can elapse between a release of a
-dual-role key and its next press and still be called a doublePress.
+`doublePress` is the maximum number of milliseconds that can elapse between a release of a dual-role
+key and its next press and still be called a doublePress. Set it to `-1` to disable doublePress-ing,
+and thus repetition.
 
 _comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can be set as such:
 
@@ -293,6 +335,8 @@ Changelog
   and encourages changing the settings before setting up dual-role keys. (Backwards incompatible
   change.)
 - Improved: Re-factored some code.
+- Added: The `modifier()` method.
+- Improved: The `timeout` and `doublePress` can be turned off, by setting them to `-1`.
 
 0.3.2 (2013-09-01)
 ------------------
