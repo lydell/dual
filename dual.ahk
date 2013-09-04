@@ -320,9 +320,8 @@ class Dual {
 
 	static sentKeys
 	sendInternal(string) {
-		if (this.sentKeys) {
-			this.sentKeys.Insert(string)
-			; MsgBox added!
+		if (Dual.sentKeys) {
+			Dual.sentKeys.Insert(string)
 		} else {
 			SendInput {Blind}{%string%}
 		}

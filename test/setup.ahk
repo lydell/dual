@@ -5,7 +5,6 @@
 #Include Yunit/Window.ahk
 
 #Include ../dual.ahk
-dual := new Dual
 
 assert(args*) {
 	Yunit.Assert(args*)
