@@ -7,7 +7,8 @@ easily. For example, combine the space bar and shift keys. It is heavily inspire
 Dual is not just another script you download, auto-run and forget. It is a tool you include and use,
 perhaps in an already existing remapping script.
 
-It is currently quite stable and feature complete, but needs more testing.
+It is currently quite stable and feature complete, but needs more testing. However, until version
+1.0.0 is released, the API might (and has) change in backwards incompatible ways without warning.
 
 
 
@@ -25,9 +26,6 @@ used for configuration and setting up your dual-role keys.
     #Include <dual/dual>
     dual := new Dual
 
-    ; Configure a setting.
-    dual.timeout := 400
-
     ; Steve Losh shift buttons.
     *LShift::
     *LShift UP::dual.combine(A_ThisHotkey, "(")
@@ -42,7 +40,7 @@ used for configuration and setting up your dual-role keys.
     *j::
     *j UP::dual.combine("RWin", "n")
 
-You can use [sample.ahk] as a starting point.
+You can use [sample.ahk] as a starting point. It works out of the box—just run it!
 
 
 
@@ -52,8 +50,8 @@ Pros & Cons
 Why use this? Well, to get more characters onto your keyboard. Why can you press for example shift
 by itself, and it produces nothing? Let it do something instead!
 
-You can also use Dual to put modifier keys in more convenient places, like on the home row. I'm
-currently experimenting with that myself.
+You can also use Dual to put modifier keys in more convenient places, like on the home row (which I
+do).
 
 Normally, all keys send their characters when pressed down. Dual-role keys, on the other hand, sends
 their characters when the key is _released_, since they act as modifiers when pressed down. This
@@ -63,11 +61,12 @@ their own. But if you put modifiers on the home row you probably will, since thi
 used to seeing the characters pop up immediately on the screen. Moreover, the characters of the
 other rows still do, so you will constantly _see_ the difference too, not just remember it.
 
-As I said, I currently experiment with modifiers on the home row. My first reaction was: "Ugh, that
-looks terrible!" It felt like typing in the terminal with a somewhat bad ssh connection. Initially
-that slowed me down. After a while, though, I learned to ignore the lag, just typing on like before.
-After yet a while, I didn't think much about it any longer. So, for me, having the modifiers in
-really convenient spots is definitely worth the lag.
+As I said, I put the modifiers on the home row. My first reaction was: "Ugh, that looks terrible!",
+since the home row characters appeared on the screen slower than before. It felt like typing in the
+terminal with a somewhat bad ssh connection. Initially that slowed me down. After a while, though, I
+learned to ignore the lag, just typing on like before. After yet a while, I didn't think much about
+it any longer. So, for me, having the modifiers in really convenient spots is definitely worth the
+lag.
 
 Everyone might not stand the lag, though. If so, simply don't make any character keys into dual-role
 keys. I can still recommend making the modifier keys and space bar into dual-role keys to anyone.
@@ -81,9 +80,11 @@ API
 
 Note that all methods that accepts keys expect keys from the [key list].
 
-The `Dual` class takes no parameters.
+The `Dual` class takes an optional settings object as parameter. See [Configuration] for the
+available settings.
 
-    dual := new Dual
+    dual := new Dual ; Use default settings.
+    dual := new Dual({settingName: value}) ; Override some default setting.
 
 Throughout the rest of the documentation, `dual` is assumed to be an instance of the `Dual` class.
 
@@ -107,8 +108,8 @@ when pressed in combination with some other key:
 
 For convenience, and to keep your setup DRY, you may pass `A_ThisHotkey`.
 
-You may optionally pass a settings object to set the same options as described under
-[Configuration], but at key-level:
+You may optionally pass a settings object, just like when instantiating the class (see above), but
+at key-level:
 
     *r::
     *r UP::dual.combine("LWin", A_ThisHotkey, {delay: 100})
@@ -180,17 +181,15 @@ While dual-role keys might sound trivial to implement, there are some pretty com
 to work with. Only _using_ dual-role keys is really easy. Here is a summary and the defaults of the
 configuration.
 
-    dual.timeout     := 300
-    dual.delay       := 70
-    dual.doublePress := 200
+    settings := {delay: 70, timeout: 300, doublePress: 200}
 
-`dual.delay` is the number of milliseconds that you must hold a dual-role key in order for it to
+`delay` is the number of milliseconds that you must hold a dual-role key in order for it to
 count as a combination with another key (comboKeys only, though).
 
-`dual.timeout` is the number of milliseconds after which the downKey starts to be sent, and the
+`timeout` is the number of milliseconds after which the downKey starts to be sent, and the
 upKey won't be sent.
 
-`dual.doublePress` is the maximum number of milliseconds that can elapse between a release of a
+`doublePress` is the maximum number of milliseconds that can elapse between a release of a
 dual-role key and its next press and still be called a doublePress.
 
 _comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can be set as such:
@@ -270,19 +269,30 @@ input** could be rewritten like the following, to send the input as expected:
 
 `dual.Send()` works exactly like the `Send` command, except that it temporarily releases any dual-
 role keys that are down for the moment first. There is also `dual.SendInput()`, `dual.SendEvent()`,
-`dual.SendPlay()` and `dual.SendRaw()`. Simply prepend your Send* commands with "dual.".
+`dual.SendPlay()` and `dual.SendRaw()`.
 
 
 
 Tests
 =====
 
-Dual will hopefully be tested in the future, perhaps using [YUnit].
+[YUnit] is used for unit testing. To run the tests, simply run [test/dual.ahk]. (However, there are
+no meaningful tests yet.)
 
 
 
 Changelog
 =========
+
+0.4.0 (Unreleased)
+------------------
+
+- Added: Initial unit testing.
+- Changed: The `Dual` constructor now takes an optional settings object as parameter, just like the
+  `combine()` method, instead of setting properties on the instance. This is more consistent, nicer
+  and encourages changing the settings before setting up dual-role keys. (Backwards incompatible
+  change.)
+- Improved: Re-factored some code.
 
 0.3.2 (2013-09-01)
 ------------------
@@ -350,5 +360,6 @@ License
 [Limitations]:         #limitations
 [MIT Licensed]:        LICENSE
 [sample.ahk]:          sample.ahk
+[test/dual.ahk]:       test/dual.ahk
 [wikipedia-dual-role]: http://en.wikipedia.org/wiki/Modifier_key#Dual-role_keys
 [YUnit]:               https://github.com/Uberi/Yunit

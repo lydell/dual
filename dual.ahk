@@ -2,38 +2,28 @@ class Dual {
 	;;; Settings.
 	; They are described in detail in the readme. Remember to mirror the defaults there.
 
-	timeout     := 300
-	delay       := 70
-	doublePress := 200
+	settings := {delay: 70, timeout: 300, doublePress: 200}
 
 
 	;;; Public methods.
 	; They are described in the readme. Remember to mirror the function headers there.
 
-	keys := {}
+	__New(settings=false) {
+		Dual.override(this.settings, settings)
+	}
+
 	combine(downKey, upKey, settings=false) {
 		currentKey := A_ThisHotkey
-
-		cleanKey := Dual.cleanKey(currentKey)
-		if (this.keys[cleanKey]) {
-			keys := this.keys[cleanKey]
-		} else {
-			keys := {downKey: new this.Key(downKey), upKey: new this.Key(upKey)}
-			keys.timeout     := this.timeout
-			keys.delay       := this.delay
-			keys.doublePress := this.doublePress
-			for setting, value in settings {
-				keys[setting] := value
-			}
-			this.keys[cleanKey] := keys
-		}
+		lastKey := A_PriorHotkey
+		keys := this.getKeysFor(currentKey, downKey, upKey, settings)
 
 		; A single `=` means case insensitive comparison. `-1` means the last two characters.
 		if (SubStr(currentKey, -1) = "UP") {
-			this.keyup(keys)
+			keyState := "keyup"
 		} else {
-			this.keydown(keys)
+			keyState := "keydown"
 		}
+		this[keyState](keys, currentKey, lastKey)
 	}
 
 	comboKey(remappingKey="") {
@@ -67,6 +57,7 @@ class Dual {
 					; period of time than a just released dual-role key, return `false` to indicate
 					; that the upKey of the just released dual-role key shouldn't be sent.
 					if (not withinDelay) {
+						return false
 						; However, notice the `not withinDelay` check above. When you released f
 						; above, what if the delay of d hasn't passed yet? That means that you
 						; likely wanted to type fd, and typed that very quickly. You pressed down f,
@@ -74,7 +65,6 @@ class Dual {
 						; while d was down. That usually means either control-f, or, if the delay
 						; hasn't passed, df. Therefore, in that case, we should _not_ return
 						; `false`. We _want_ the upKey of the just released dual-role to be sent.
-						return false
 					}
 					; Instead, we collect the keys of the dual-role key that has been down for a
 					; shorter period of time than the just released dual-role key (d in the above
@@ -83,7 +73,7 @@ class Dual {
 					; finally sends fd as we wanted.
 					shorterTimeDownKeys.Insert(keys)
 				} else if (withinDelay) {
-					this.abortDualRole(keys)
+					keys.abortDualRole()
 				} else {
 					downKey.down(true) ; Force it down, no matter what.
 					downKey.combo := true
@@ -142,14 +132,34 @@ class Dual {
 		}
 	}
 
-	; Releases a dual-role key that is held down, and sends its upKey, so that it behaves as if it
-	; was a normal key. In other words, its dual nature is aborted.
-	abortDualRole(keys) {
-		downKey := keys.downKey
-		upKey := keys.upKey
-		downKey.up()
-		upKey.send()
-		upKey.alreadySend := true
+	keys := {}
+	getKeysFor(currentKey, downKey, upKey, settings) {
+		cleanKey := Dual.cleanKey(currentKey)
+		if (this.keys[cleanKey]) {
+			keys := this.keys[cleanKey]
+		} else {
+			keys := new Dual.KeyPair(downKey, upKey, this.settings, settings)
+			this.keys[cleanKey] := keys
+		}
+		return keys
+	}
+
+	class KeyPair {
+		__New(downKey, upKey, defaults, settings) {
+			this.downKey := new Dual.Key(downKey)
+			this.upKey   := new Dual.Key(upKey)
+			Dual.override(defaults, settings, {onto: this})
+		}
+
+		; Releases a dual-role key that is held down, and sends its upKey, so that it behaves as if
+		; it was a normal key. In other words, its dual nature is aborted.
+		abortDualRole() {
+			downKey := this.downKey
+			upKey   := this.upKey
+			downKey.up()
+			upKey.send()
+			upKey.alreadySend := true
+		}
 	}
 
 	; Note that a key might mean a combination of many keys, however it is referred to as if it was
@@ -233,31 +243,23 @@ class Dual {
 
 		_timeDown := false
 		timeDown() {
-			if (this._timeDown == false) {
-				return false
-			} else {
-				return A_TickCount - this._timeDown
-			}
+			return Dual.timeSince(this._timeDown)
 		}
 
 		_lastUpTime := false
 		timeSinceLastUp() {
-			if (this._lastUpTime == false) {
-				return false
-			} else {
-				return A_TickCount - this._lastUpTime
-			}
+			return Dual.timeSince(this._lastUpTime)
 		}
 	}
 
-	keydown(keys) {
-		upKey := keys.upKey
+	keydown(keys, currentKey, lastKey) {
 		downKey := keys.downKey
+		upKey   := keys.upKey
 
 		timeSinceLastUp := upKey.timeSinceLastUp()
 		if (timeSinceLastUp != false
 			and timeSinceLastUp <= keys.doublePress ; (*1)
-			and Dual.cleanKey(A_PriorHotkey) == Dual.cleanKey(A_ThisHotkey)) { ; (*2)
+			and Dual.cleanKey(lastKey) == Dual.cleanKey(currentKey)) { ; (*2)
 			upKey.repeatMode  := true
 			upKey.alreadySend := true
 		}
@@ -277,9 +279,9 @@ class Dual {
 		downKey.down(downKey.timeDown() >= keys.timeout)
 	}
 
-	keyup(keys) {
-		upKey := keys.upKey
+	keyup(keys, currentKey, lastKey) {
 		downKey := keys.downKey
+		upKey   := keys.upKey
 
 		downKeyTimeDown := downKey.timeDown() ; `downKey.up()` below resets it; better do it before!
 
@@ -299,7 +301,7 @@ class Dual {
 				; keys, before the upKey was sent in the line above. However, sometimes that needs
 				; to been done _after_ the upKey was sent. See `combo()` for an explaination.
 				for index, keys in shorterTimeDownKeys {
-					this.abortDualRole(keys)
+					keys.abortDualRole()
 				}
 			}
 		}
@@ -311,19 +313,45 @@ class Dual {
 
 
 	;;; Utilities
-	; Call via `Dual.<method>`.
+	; Call via `Dual.<method>()`, not `this.<method>()`, for consistency.
 
 	; Cleans keys coming from `A_ThisHotkey`, which might look like `*j UP`.
 	cleanKey(key) {
 		return RegExReplace(key, "i)^[#!^+<>*~$]+| up$", "")
 	}
 
-	static sentKeys
+	static sentKeys := false
 	sendInternal(string) {
 		if (Dual.sentKeys) {
 			Dual.sentKeys.Insert(string)
 		} else {
 			SendInput {Blind}{%string%}
+		}
+	}
+
+	override(master, extension, options=false) {
+		if (options.onto) {
+			overrided := options.onto
+			for key, value in master {
+				overrided[key] := value
+			}
+		} else {
+			overrided := master
+		}
+		for key, value in extension {
+			if (not ObjHasKey(master, key)) {
+				throw new Exception("Unrecognized key: " . key)
+			}
+			overrided[key] := value
+		}
+		return overrided
+	}
+
+	timeSince(time) {
+		if (time == false) {
+			return false
+		} else {
+			return A_TickCount - time
 		}
 	}
 }

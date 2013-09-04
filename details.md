@@ -40,8 +40,7 @@ comboKeys—why bother with comboKeys at all otherwise?). Phew!
 Let me introduce the **"timeout"**. When the dual-role key has been held longer than the timeout,
 the upKey won't be sent. When you think about, don't you always hold modifier keys longer than you
 press character keys? So if you want to combine a downKey with a non-comboKey, just make sure that
-you hold down the dual-role key longer than the timeout (which you probably do anyway). The timeout
-can be set via the `timeout` property.
+you hold down the dual-role key longer than the timeout (which you probably do anyway).
 
 According to the above paragraph, if you combine a dual-role key with some other, non-comboKey
 within the timeout, that would result in both the combination _and_ the upKey. Right, I've already
@@ -94,8 +93,7 @@ if any dual-role keys are down. If so, they check how long time have elapsed sin
 down. If that time is shorter than the delay, the downKey of the dual-role key in question is
 released and its upKey sent instead. Otherwise the dual-role key is told that it has been combined
 with another key, just as before. Again, the dual-role keys _work_ with any key combination. But
-common keys better be set as comboKeys to reduce mistakes. The delay can be set via the `delay`
-property.
+common keys better be set as comboKeys to reduce mistakes.
 
 _doublePress_
 -------------
@@ -106,8 +104,7 @@ combined the space and shift keys, holding down the space bar won't produce a se
 perhaps used as indentation. What now?
 
 For this issue, a doublePress is used. Press the dual-role key, release it and press it again,
-within the doublePress time. The doublePress time can be set via the `doublePress` property. If you
-continue to hold the dual-role key, the upKey will be repeated.
+within the doublePress time. If you continue to hold the dual-role key, the upKey will be repeated.
 
 Now, the comboKeys come in handy yet a time. If you type "bob" really quickly, and "b" is a dual-
 role key, and you keep holding "b" the last time, "b" will actually start to repeat, even though
@@ -156,4 +153,3 @@ your operating system: The initial delay, repetition speed and if repetition sho
      though they are still physically down. Nothing more will be sent.
    - If the delay of that other dual-role key _has_ elapsed: {downKey up} is sent, if the dual-role
      key was down, and upKey is _not_ sent. That other dual-role key is not affected in any way.
-

@@ -89,3 +89,4 @@ dual := new Dual
 *F11::
 *F12::
 	dual.comboKey()
+	return
