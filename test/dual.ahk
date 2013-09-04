@@ -11,7 +11,7 @@ class test_Dual {
 
     test() {
     	SendEvent ff
-        assert(sent("f", "r")*)
+        assert(sent("f", "f")*)
     }
 }
 

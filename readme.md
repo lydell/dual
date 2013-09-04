@@ -326,7 +326,7 @@ no meaningful tests yet.)
 Changelog
 =========
 
-0.4.0 (Unreleased)
+0.4.0 (2013-09-04)
 ------------------
 
 - Added: Initial unit testing.
