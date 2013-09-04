@@ -1,17 +1,3 @@
-; Cleans keys coming from `A_ThisHotkey`, which might look like `*j UP`.
-Dual_cleanKey(key) {
-	return RegExReplace(key, "i)^[#!^+<>*~$]+| up$", "")
-}
-
-Dual_send(string) {
-	global Dual_sentKeys
-	if (Dual_sentKeys) {
-		Dual_sentKeys.Insert(string)
-	} else {
-		SendInput {Blind}{%string%}
-	}
-}
-
 class Dual {
 	;;; Settings.
 	; They are described in detail in the readme. Remember to mirror the defaults there.
@@ -28,7 +14,7 @@ class Dual {
 	combine(downKey, upKey, settings=false) {
 		currentKey := A_ThisHotkey
 
-		cleanKey := Dual_cleanKey(currentKey)
+		cleanKey := Dual.cleanKey(currentKey)
 		if (this.keys[cleanKey]) {
 			keys := this.keys[cleanKey]
 		} else {
@@ -54,11 +40,11 @@ class Dual {
 		this.combo()
 
 		if (remappingKey == "") {
-			key := Dual_cleanKey(A_ThisHotkey)
+			key := Dual.cleanKey(A_ThisHotkey)
 		} else {
 			key := remappingKey
 		}
-		Dual_send(key)
+		Dual.sendInternal(key)
 	}
 
 	; `justReleasedDownKeyTimeDown` is not documented in the readme, since it is only used internally.
@@ -178,7 +164,7 @@ class Dual {
 
 			; Support subKeys coming from `A_ThisHotkey`.
 			for index, subKey in key {
-				key[index] := Dual_cleanKey(subKey)
+				key[index] := Dual.cleanKey(subKey)
 			}
 
 			this.key := key
@@ -213,7 +199,7 @@ class Dual {
 				; might not: The user can release it while holding the dual-role key.
 				if (this.subKeysDown[key] or not GetKeyState(key)) {
 					this.subKeysDown[key] := true
-					Dual_send(key " down")
+					Dual.sendInternal(key " down")
 				}
 			}
 		}
@@ -229,7 +215,7 @@ class Dual {
 				; that another identical key was already down by then. Or, `up()` might already have
 				; been called.
 				if (this.subKeysDown[key]) {
-					Dual_send(key " up")
+					Dual.sendInternal(key " up")
 				}
 			}
 			this.subKeysDown := {}
@@ -238,7 +224,7 @@ class Dual {
 		send() {
 			this._lastUpTime := A_TickCount
 			for index, key in this.key { ; (*)
-				Dual_send(key)
+				Dual.sendInternal(key)
 			}
 		}
 
@@ -271,7 +257,7 @@ class Dual {
 		timeSinceLastUp := upKey.timeSinceLastUp()
 		if (timeSinceLastUp != false
 			and timeSinceLastUp < keys.doublePress ; (*1)
-			and Dual_cleanKey(A_PriorHotkey) == Dual_cleanKey(A_ThisHotkey)) { ; (*2)
+			and Dual.cleanKey(A_PriorHotkey) == Dual.cleanKey(A_ThisHotkey)) { ; (*2)
 			upKey.repeatMode  := true
 			upKey.alreadySend := true
 		}
@@ -321,5 +307,24 @@ class Dual {
 		downKey.combo     := false
 		upKey.alreadySend := false
 		upKey.repeatMode  := false
+	}
+
+
+	;;; Utilities
+	; Call via `Dual.<method>`.
+
+	; Cleans keys coming from `A_ThisHotkey`, which might look like `*j UP`.
+	cleanKey(key) {
+		return RegExReplace(key, "i)^[#!^+<>*~$]+| up$", "")
+	}
+
+	static sentKeys
+	sendInternal(string) {
+		if (this.sentKeys) {
+			this.sentKeys.Insert(string)
+			; MsgBox added!
+		} else {
+			SendInput {Blind}{%string%}
+		}
 	}
 }
