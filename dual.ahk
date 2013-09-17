@@ -37,6 +37,14 @@ class Dual {
 		Dual.sendInternal(key)
 	}
 
+	allModifiers := ["LShift", "RShift", "LCtrl", "RCtrl", "LAlt", "RAlt", "LWin", "RWin"]
+	reset() {
+		this.keys := {}
+		for index, modifier in this.allModifiers {
+			SendInput {%modifier% up}
+		}
+	}
+
 	; `justReleasedDownKeyTimeDown` is not documented in the readme, since it is only used internally.
 	combo(justReleasedDownKeyTimeDown=-1) {
 		shorterTimeDownKeys := []

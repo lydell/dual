@@ -212,6 +212,39 @@ upKey! The above example is actually equivalent to:
 role keys that are down for the moment first. There are also `dual.SendInput()`, `dual.SendEvent()`,
 `dual.SendPlay()` and `dual.SendRaw()`. See [Limitations] for usage of this method.
 
+`dual.reset()`
+--------------
+
+I strongly recommend that you create a non modifier shortcut that calls this function. Why? Because
+in some programs, such as [KeePass] when entering a password in its secure screen, or an elevated
+command prompt, AutoHotkey does not work at all. I guess it's a security thing. This can cause your
+dual-role keys to be stuck down, which, in the worst case, requires a reboot.
+
+For example: KeePass has a global shortcut to open its window: ctrl-alt-k. If you type that shortcut
+using dual-role keys, and your currently open KeePass password database happens to be locked, that
+will bring up the KeePass dialog to enter your password for the database, as expected. However, that
+will also block AutoHotkey—before you have had time to release your dual-role keys! They will now be
+stuck down, which will make it next to impossible to type anything, or actually use your keyboard at
+all. Usually, it is enough to turn off the AutoHotkey script, and then press each modifier once. But
+in this case, the only solution I've found is to reboot the computer.
+
+That's where `dual.reset()` comes into the picture. It resets all dual-role keys, and sends
+{modifier up} for each modifier (shift, ctrl, alt and win—left and right). I recommend binding that
+to some key—regardless of which modifiers are down—so that you can press that key if some modifier
+is stuck, saving a reboot. Example:
+
+    ; Note the `*`! It allows you to press ScrollLock even if a modifier is stuck.
+    *ScrollLock::dual.reset()
+
+I wish that this method wasn't necessary, but unfortunately it sometimes is. If a key gets stuck
+down, it's a bug. But in the case where AutoHotkey (or any other program) isn't run for security
+reasons, I don't think there is anything I can do.
+
+### KeePass work-around ###
+
+If your database is locked, don't use the ctrl-alt-k shortcut. Instead, use win-b to focus the tray
+(by the clock), then navigate to the KeePass icon using the arrow keys and finally hit enter.
+Perhaps you could automate that with AutoHotkey ;)
 
 
 Configuration
@@ -326,6 +359,11 @@ no meaningful tests yet.)
 Changelog
 =========
 
+0.4.1 (2013-09-17)
+------------------
+
+- Added: The `reset()` method, to deal with modifiers being stuck down.
+
 0.4.0 (2013-09-04)
 ------------------
 
@@ -400,6 +438,7 @@ License
 [comboKey]:            details.ahk#combokeys
 [Configuration]:       #configuration
 [details]:             details.md
+[KeePass]:             http://keepass.info/
 [key list]:            http://www.autohotkey.com/docs/KeyList.htm
 [Limitations]:         #limitations
 [MIT Licensed]:        LICENSE
