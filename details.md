@@ -53,11 +53,11 @@ dual-role key is that {downKey down} is sent. That is actually not true. {downKe
 until the timeout has passed. That's why only the upKey is sent, and the combination does not occur,
 as described above. But why?
 
-As mentioned under [Pros & Cons](#pros--cons), what makes it possible to combine a modifier key with
-another key is that the modifier only does something when held down. However, that is not true for
-_all_ modifiers. Take the Windows key for example. When released it opens the start menu (in fact,
-it is already a dual-role modifier key; a combination of a special modifier and an "open the start
-menu" key). Or the alt keys, which might show a hidden menu bar when released.
+What makes it possible to combine a modifier key with another key is that the modifier only does
+something when held down. However, that is not true for _all_ modifiers. Take the Windows key for
+example. When released it opens the start menu (in fact, it is already a dual-role modifier key; a
+combination of a special modifier and an "open the start menu" key). Or the alt keys, which might
+show a hidden menu bar when released.
 
 Alright, what about those modifiers? Well, if you try to use them in dual-role keys, you will get
 trouble. For example, if you have combined the "w" and Windows keys, and you tap "w", you'd expect a
@@ -118,27 +118,32 @@ Timeline
 
 1. `t=0`. The dual-role key is physically pressed down. Nothing is sent (*).
 
-   - If released: The upKey is sent (**).
-   - If combined with a comboKey: The upKey is sent, followed by the comboKey. The dual-role key is
-     now considered to be released, even though it is still physically down. Nothing more will be
-     sent.
-   - If combined with some other key: That other key is sent as it normally would. It is not
-     affected by the dual-role key in any way, and the dual-role key is not affected by it.
+   **If released:** The upKey is sent (**).
+
+   **If combined with a comboKey:** The upKey is sent, followed by the comboKey. The dual-role key
+   is now considered to be released, even though it is still physically down. Nothing more will be
+   sent.
+
+   **If combined with some other key:** That other key is sent as it normally would. It is not
+   affected by the dual-role key in any way, and the dual-role key is not affected by it.
 
 2. `t=delay`. Nothing is sent.
 
-   - If released: The upKey is sent (**).
-   - If combined with a comboKey: {downKey down} is sent, followed by the comboKey. The dual-role
-     key now acts as a held down modifier, which affects the comboKey.
-   - If combined with some other key: That other key is sent as it normally would. It is not
-     affected by the dual-role key in any way, and the dual-role key is not affected by it.
+   **If released:** The upKey is sent (**).
+
+   **If combined with a comboKey:** {downKey down} is sent, followed by the comboKey. The dual-role
+   key now acts as a held down modifier, which affects the comboKey.
+
+   **If combined with some other key:** That other key is sent as it normally would. It is not
+   affected by the dual-role key in any way, and the dual-role key is not affected by it.
 
 3. `t=timeout`. {downKey down} is sent. The dual-role key now acts as a held down modifier.
 
-   - If released: {downKey up} is sent. (Note that the upKey is _not_ sent.)
-   - If combined with a comboKey or some other key: The key in question is sent as it normally
-     would. It is however affected by the dual-role key, since the dual-role key acts as a held down
-     modifier.
+   **If released:** {downKey up} is sent. (Note that the upKey is _not_ sent.)
+
+   **If combined with a comboKey or some other key:** The key in question is sent as it normally
+   would. It is however affected by the dual-role key, since the dual-role key acts as a held down
+   modifier.
 
 (*) Unless the time elapsed since the dual-role key last was released is less than or equal to the
 doublePress time, and the last pressed comboKey is the dual-role key itself. If so, the dual-role
