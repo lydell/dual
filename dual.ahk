@@ -2,7 +2,7 @@ class Dual {
 	;;; Settings.
 	; They are described in detail in the readme. Remember to mirror the defaults there.
 
-	settings := {delay: 70, timeout: 300, doublePress: 200}
+	settings := {delay: 70, timeout: 300, doublePress: 200, force: false}
 
 
 	;;; Public methods.
@@ -293,8 +293,10 @@ class Dual {
 
 		; Only send the actual key strokes if the timeout has passed, in order to support modifiers
 		; that do something when released, such as the alt and Windows keys. The comboKeys will
-		; force the downKey down, if they are combined before the timeout has passed.
-		downKey.down(keys.timeout != -1 and downKey.timeDown() >= keys.timeout)
+		; force the downKey down, if they are combined before the timeout has passed. This behavior
+		; can be bypassed by using the `force` option, which is useful for "homemade" modifiers
+		; (such as F22).
+		downKey.down((keys.timeout != -1 and downKey.timeDown() >= keys.timeout) or keys.force)
 	}
 
 	keyup(keys, currentKey, lastKey) {

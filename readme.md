@@ -8,7 +8,7 @@ Dual is not just another script you download, auto-run and forget. It is a tool 
 perhaps in an already existing remapping script.
 
 It is currently quite stable and feature complete, but needs more testing. However, until version
-1.0.0 is released, the API might (and has) change in backwards incompatible ways without warning.
+1.0.0 is released, the API might change in backwards incompatible ways without warning.
 
 
 
@@ -152,7 +152,7 @@ This way is also more reliable.
 `dual.combo()`
 --------------
 
-Let's you make a key into a comboKey without sending the key itself, in contrast to the `comboKey()`
+Lets you make a key into a comboKey without sending the key itself, in contrast to the `comboKey()`
 method.
 
     9::
@@ -250,11 +250,11 @@ Perhaps you could automate that with AutoHotkey ;)
 Configuration
 =============
 
-While dual-role keys might sound trivial to implement, there are some pretty complicated [details]
-to work with. Only _using_ dual-role keys is really easy. Here is a summary and the defaults of the
-configuration.
+While dual-role keys might sound trivial to implement, there are some pretty complicated
+**[details]** to work with. Only _using_ dual-role keys is really easy. Here is a summary and the
+defaults of the configuration.
 
-    settings := {delay: 70, timeout: 300, doublePress: 200}
+    settings := {delay: 70, timeout: 300, doublePress: 200, force: false}
 
 `delay` is the number of milliseconds that you must hold a dual-role key in order for it to count as
 a combination with another key (comboKeys only, though). Set it to `0` to turn off the feature (of
@@ -266,6 +266,10 @@ upKey won't be sent. Set it to `-1` to turn the feature off—to never timeout.
 `doublePress` is the maximum number of milliseconds that can elapse between a release of a dual-role
 key and its next press and still be called a doublePress. Set it to `-1` to disable doublePress-ing,
 and thus repetition.
+
+`force` causes the downKey to be sent immediately, even if you have a timeout. The timeout (and
+everything else) otherwise works as normal. This lets you create your own "homemade modifiers" (see
+[Limitations]).
 
 _comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can be set as such:
 
@@ -324,7 +328,26 @@ the following, to be able to be activated by a dual-role key:
     d::SendInput 1337
     #If
 
-Which isn't that bad though.
+Which isn't that bad though. However, you might find such shortcuts more laggy than native
+shortcuts. It seems like you have to hold your dual-role key for more that the timeout for the
+shortcuts to actually trigger, comboKeys or not. To speed them up, use the `force` option.
+
+    *Space::
+    *Space UP::dual.combine("F22", A_ThisHotkey, {force: true})
+
+    #If GetKeyState("F22")
+    i::Up
+    j::Left
+    k::Down
+    l::Right
+    #If
+
+The above example turns space into a homemade modifier that puts the navigation keys on ijkl. This
+is done by using a key not present on most keyboards (F22). The `force` option makes F22 be sent
+immediately when space is pressed down, no matter what, to trigger the ijkl shortcuts quickly. The
+side effect of this is that any time you press space alone to actually type a space, an unnecessary
+F22 will be sent first. However, that should not matter, since F22 doesn't exist on most keyboards,
+and therefore has no effect in programs.
 
 Modifier hotkeys that send
 --------------------------
@@ -358,6 +381,11 @@ no meaningful tests yet.)
 
 Changelog
 =========
+
+0.4.2 (2013-11-12)
+------------------
+
+- Added: The `force` option.
 
 0.4.1 (2013-09-17)
 ------------------
