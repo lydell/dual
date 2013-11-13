@@ -267,9 +267,8 @@ upKey won't be sent. Set it to `-1` to turn the feature off—to never timeout.
 key and its next press and still be called a doublePress. Set it to `-1` to disable doublePress-ing,
 and thus repetition.
 
-`force` causes the downKey to be sent immediately, even if you have a timeout. The timeout (and
-everything else) otherwise works as normal. This lets you create your own "homemade modifiers" (see
-[Limitations]).
+`force` causes the downKey to be sent when the delay has passed, instead of the timeout. This lets
+you create your own "homemade modifiers" (see [Limitations]).
 
 _comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can be set as such:
 
@@ -336,18 +335,18 @@ shortcuts to actually trigger, comboKeys or not. To speed them up, use the `forc
     *Space UP::dual.combine("F22", A_ThisHotkey, {force: true})
 
     #If GetKeyState("F22")
-    i::Up
-    j::Left
-    k::Down
-    l::Right
+    *i::dual.comboKey("Up")
+    *j::dual.comboKey("Left")
+    *k::dual.comboKey("Down")
+    *l::dual.comboKey("Right")
     #If
 
 The above example turns space into a homemade modifier that puts the navigation keys on ijkl. This
 is done by using a key not present on most keyboards (F22). The `force` option makes F22 be sent
-immediately when space is pressed down, no matter what, to trigger the ijkl shortcuts quickly. The
-side effect of this is that any time you press space alone to actually type a space, an unnecessary
-F22 will be sent first. However, that should not matter, since F22 doesn't exist on most keyboards,
-and therefore has no effect in programs.
+when the delay has passed (as opposed to when the _timeout_ has passed), no matter what, to trigger
+the ijkl shortcuts quickly. The side effect of this is that when you press space alone to actually
+type a space, an unnecessary F22 might be sent first. However, that should not matter, since F22
+doesn't exist on most keyboards, and therefore has no effect in programs.
 
 Modifier hotkeys that send
 --------------------------
@@ -381,6 +380,12 @@ no meaningful tests yet.)
 
 Changelog
 =========
+
+0.4.3 (2013-11-13)
+------------------
+
+- Fixed: The `force` option should cause the downKey to be sent when the delay has passed, not
+  immediately, to make the delay useful at all.
 
 0.4.2 (2013-11-12)
 ------------------

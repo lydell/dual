@@ -18,22 +18,14 @@ class Dual {
 		keys := this.getKeysFor(currentKey, downKey, upKey, settings)
 
 		; A single `=` means case insensitive comparison. `-1` means the last two characters.
-		if (SubStr(currentKey, -1) = "UP") {
-			keyState := "keyup"
-		} else {
-			keyState := "keydown"
-		}
+		keyState := (SubStr(currentKey, -1) = "UP") ? "keyup" : "keydown"
 		this[keyState](keys, currentKey, lastKey)
 	}
 
 	comboKey(remappingKey=false) {
 		this.combo()
 
-		if (remappingKey) {
-			key := remappingKey
-		} else {
-			key := Dual.cleanKey(A_ThisHotkey)
-		}
+		key := remappingKey ? remappingKey : Dual.cleanKey(A_ThisHotkey)
 		Dual.sendInternal(key)
 	}
 
@@ -92,11 +84,7 @@ class Dual {
 	}
 
 	modifier(remappingKey=false) {
-		if (remappingKey) {
-			key := remappingKey
-		} else {
-			key := A_ThisHotkey
-		}
+		key := remappingKey ? remappingKey : A_ThisHotkey
 		this.combine(key, key, {delay: 0, timeout: 0, doublePress: -1})
 	}
 
@@ -293,10 +281,11 @@ class Dual {
 
 		; Only send the actual key strokes if the timeout has passed, in order to support modifiers
 		; that do something when released, such as the alt and Windows keys. The comboKeys will
-		; force the downKey down, if they are combined before the timeout has passed. This behavior
-		; can be bypassed by using the `force` option, which is useful for "homemade" modifiers
-		; (such as F22).
-		downKey.down((keys.timeout != -1 and downKey.timeDown() >= keys.timeout) or keys.force)
+		; force the downKey down, if they are combined before the timeout has passed. The `force`
+		; option uses the delay instead of the timeout, to more aggressively trigger shortcuts,
+		; which is useful for "homemade" modifiers (such as F22).
+		limit := keys.force ? keys.delay : keys.timeout
+		downKey.down(limit != -1 and downKey.timeDown() >= limit)
 	}
 
 	keyup(keys, currentKey, lastKey) {
