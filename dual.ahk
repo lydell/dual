@@ -2,7 +2,7 @@ class Dual {
 	;;; Settings.
 	; They are described in detail in the readme. Remember to mirror the defaults there.
 
-	settings := {delay: 70, timeout: 300, doublePress: 200, force: false}
+	settings := {delay: 70, timeout: 300, doublePress: 200}
 
 
 	;;; Public methods.
@@ -22,10 +22,22 @@ class Dual {
 		this[keyState](keys, currentKey, lastKey)
 	}
 
-	comboKey(remappingKey=false) {
+	comboKey(remappingKey=false, combinators=false) {
+		; Allow `comboKey(combinators)`.
+		if (not combinators and IsObject(remappingKey)) {
+			combinators := remappingKey
+			remappingKey := false
+		}
+
 		this.combo()
 
 		key := remappingKey ? remappingKey : Dual.cleanKey(A_ThisHotkey)
+		for combinator, resultingKey in combinators {
+			if (GetKeyState(combinator)) {
+				key := resultingKey
+				break
+			}
+		}
 		Dual.sendInternal(key)
 	}
 
@@ -281,11 +293,8 @@ class Dual {
 
 		; Only send the actual key strokes if the timeout has passed, in order to support modifiers
 		; that do something when released, such as the alt and Windows keys. The comboKeys will
-		; force the downKey down, if they are combined before the timeout has passed. The `force`
-		; option uses the delay instead of the timeout, to more aggressively trigger shortcuts,
-		; which is useful for "homemade" modifiers (such as F22).
-		limit := keys.force ? keys.delay : keys.timeout
-		downKey.down(limit != -1 and downKey.timeDown() >= limit)
+		; force the downKey down, if they are combined before the timeout has passed.
+		downKey.down(keys.timeout != -1 and downKey.timeDown() >= keys.timeout)
 	}
 
 	keyup(keys, currentKey, lastKey) {

@@ -120,8 +120,8 @@ An older version of Dual provided a method called `set()` instead of `combine()`
 keys for you, using the `Hotkey` command. That was perhaps a bit more convenient (you didn't have to
 write the key name twice for instance), but caused problems with other hotkeys.
 
-`dual.comboKey(remappingKey=false)`
------------------------------------
+`dual.comboKey(remappingKey=false, combinators=false)` or `dual.comboKey(combinators)`
+--------------------------------------------------------------------------------------
 
 The method is supposed to be called as such:
 
@@ -143,6 +143,8 @@ parameter. For example, if you previously swapped the following keys like so …
     *a::dual.comboKey("b")
     *b::dual.comboKey("c")
     *c::dual.comboKey("a")
+
+See [Limitations] for documentation on the `combinators` parameter.
 
 An older version of Dual provided a setting called `Dual.comboKeys` instead of this method, which
 set up the comboKeys for you, using the `Hotkey` command. That is not possible anymore, because it
@@ -186,7 +188,7 @@ You can solve this edge case by using the following:
     *RCtrl::
     *RCtrl UP::dual.modifier()
 
-You can optionally remap just like the `comboKey()` method.
+You can optionally remap, just like the `comboKey()` method.
 
 Note that if _only_ normal modifiers or _only_ dual-role keys are involved, this issue can never
 occur.
@@ -254,7 +256,7 @@ While dual-role keys might sound trivial to implement, there are some pretty com
 **[details]** to work with. Only _using_ dual-role keys is really easy. Here is a summary and the
 defaults of the configuration.
 
-    settings := {delay: 70, timeout: 300, doublePress: 200, force: false}
+    settings := {delay: 70, timeout: 300, doublePress: 200}
 
 `delay` is the number of milliseconds that you must hold a dual-role key in order for it to count as
 a combination with another key (comboKeys only, though). Set it to `0` to turn off the feature (of
@@ -266,9 +268,6 @@ upKey won't be sent. Set it to `-1` to turn the feature off—to never timeout.
 `doublePress` is the maximum number of milliseconds that can elapse between a release of a dual-role
 key and its next press and still be called a doublePress. Set it to `-1` to disable doublePress-ing,
 and thus repetition.
-
-`force` causes the downKey to be sent when the delay has passed, instead of the timeout. This lets
-you create your own "homemade modifiers" (see [Limitations]).
 
 _comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can be set as such:
 
@@ -317,36 +316,57 @@ Consider the following example:
     *j::
     *j UP::dual.combine("F12", A_ThisHotkey)
 
-    F12 & d::SendInput 1337
+    F12 & d::SendInput e
 
-Pressing d while holding down j should produce 1337, right? I wish it did. In reality, the hotkey
+Pressing d while holding down j should produce e, right? I wish it did. In reality, the hotkey
 isn't triggered at all. Any already existing hotkeys using the `&` combiner could be rewritten like
 the following, to be able to be activated by a dual-role key:
 
     #If GetKeyState("F12")
-    d::SendInput 1337
+    d::SendInput e
     #If
 
-Which isn't that bad though. However, you might find such shortcuts more laggy than native
-shortcuts. It seems like you have to hold your dual-role key for more that the timeout for the
-shortcuts to actually trigger, comboKeys or not. To speed them up, use the `force` option.
+However, you might find such shortcuts more laggy than native shortcuts. It seems like you have to
+hold your dual-role key for more that the timeout for the shortcuts to actually trigger, comboKeys
+or not. So dual provides a different way of achieving this, using the second parameter `combinators`
+of the `comboKey()` method.
+
+    *d::dual.comboKey({F12: "e"})
+
+The above does two things. It turns d into a comboKey, without remapping it. It also checks if F12
+is down before sending itself. If it is, e is sent instead. If you also want to remap d to f, you
+can:
+
+    *d::dual.comboKey("f", {F12: "e"})
+
+But what if you wanted something more complex?
+
+    F12 & d::SendInput (){Left}
+
+Then you'll have to resort to something more manual:
+
+    d::
+        dual.combo()
+        if (GetKeyState("F12")) {
+            SendInput (){Left}
+        } else {
+            SendInput d
+        }
+        return
+
+The biggest use case for this, is to be able to make "homemade" modifiers, to create a new layer on
+the keyboard.
 
     *Space::
-    *Space UP::dual.combine("F22", A_ThisHotkey, {force: true})
+    *Space UP::dual.combine("F22", A_ThisHotkey)
 
-    #If GetKeyState("F22")
-    *i::dual.comboKey("Up")
-    *j::dual.comboKey("Left")
-    *k::dual.comboKey("Down")
-    *l::dual.comboKey("Right")
-    #If
+    *i::dual.comboKey({F22: "Up"})
+    *j::dual.comboKey({F22: "Left"})
+    *k::dual.comboKey({F22: "Down"})
+    *l::dual.comboKey({F22: "Right"})
 
 The above example turns space into a homemade modifier that puts the navigation keys on ijkl. This
-is done by using a key not present on most keyboards (F22). The `force` option makes F22 be sent
-when the delay has passed (as opposed to when the _timeout_ has passed), no matter what, to trigger
-the ijkl shortcuts quickly. The side effect of this is that when you press space alone to actually
-type a space, an unnecessary F22 might be sent first. However, that should not matter, since F22
-doesn't exist on most keyboards, and therefore has no effect in programs.
+is done by using a key not present on most keyboards (F22).
 
 Modifier hotkeys that send
 --------------------------
@@ -356,7 +376,7 @@ Consider the following example:
     *j::
     *j UP::dual.combine("RShift", A_ThisHotkey)
 
-    +d::Send1337
+    +d::Send 1337
 
 Pressing d while holding down j should produce 1337, right? I wish it did. In reality, !##& is sent,
 just as if `{Blind}` was used. Any already existing hotkeys that involves modifiers and that **send
@@ -380,6 +400,13 @@ no meaningful tests yet.)
 
 Changelog
 =========
+
+0.5.0 (Unreleased)
+------------------
+
+- Removed: The `force` option. It never really worked. (Backwards incompatible change.)
+- Added: The `combinators` parameter of the `comboKey()` method, replacing the `force` option and
+  the old advice on combinator shortcuts.
 
 0.4.3 (2013-11-13)
 ------------------
