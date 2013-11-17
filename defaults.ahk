@@ -1,20 +1,3 @@
-SendMode Input
-#NoEnv
-#SingleInstance force
-
-
-#Include dual.ahk
-dual := new Dual
-
-
-;;; dual-role keys
-
-*Space::
-*Space UP::dual.combine("RCtrl", A_ThisHotkey)
-
-
-;;; comboKeys
-
 *a::
 *b::
 *c::
@@ -73,7 +56,7 @@ dual := new Dual
 *Insert::
 *Delete::
 *Backspace::
-; *Space:: ; Commented out since space is set as a dual-role key above.
+*Space::
 *Enter::
 *Tab::
 *F1::
@@ -90,3 +73,23 @@ dual := new Dual
 *F12::
 	dual.comboKey()
 	return
+
+*LShift::
+*LShift UP::
+*RShift::
+*RShift UP::
+*LCtrl::
+*LCtrl UP::
+*RCtrl::
+*RCtrl UP::
+*LAlt::
+*LAlt UP::
+*RAlt::
+*RAlt UP::
+*LWin::
+*LWin UP::
+*RWin::
+*RWin UP::
+	dual.modifier()
+	return
+

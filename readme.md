@@ -21,10 +21,19 @@ git (`git clone https://github.com/lydell/dual.git Lib/dual`) or, preferably, ad
 (`git submodule add https://github.com/lydell/dual.git Lib/dual`).
 
 Then include the script into the AutoHotkey file you chose. That exposes the `Dual` class, which is
-used for configuration and setting up your dual-role keys.
+used for configuration and setting up your dual-role keys. Example:
+
+    ; Recommended, but not required:
+    SendMode Input
+    #NoEnv
+    #SingleInstance force
 
     #Include <dual/dual>
     dual := new Dual
+
+    #Include <dual/defaults>
+
+    #If true ; Override defaults.ahk. There will be "duplicate hotkey" errors otherwise.
 
     ; Steve Losh shift buttons.
     *LShift::
@@ -40,7 +49,9 @@ used for configuration and setting up your dual-role keys.
     *j::
     *j UP::dual.combine("RWin", "n")
 
-You can use [sample.ahk] as a starting point. It works out of the box—just run it!
+    #If
+
+    *ScrollLock::dual.reset()
 
 
 
@@ -274,8 +285,6 @@ _comboKeys_ are keys that enhance the accuracy of the dual-role keys. They can b
     *a::
     *a UP::dual.comboKey()
 
-See [sample.ahk] for a starting point.
-
 Also note that the settings can be set per dual-role key. See the `combine()` method. This let's you
 fine-tune specific keys. After all, our fingers and the possible key combinations of the keyboard
 are all different.
@@ -302,6 +311,54 @@ Windows key. (I also made sure that "r" is a comboKey.) I then typed words like 
 shortcut for opening it). When I had too much delay, I wasn't able to activate other Windows
 shortcuts, such as `#m` (which minimizes all windows), because I typed the shortcut too quickly:
 dual thought that I accidentally made a combination. After I while I found a balance.
+
+
+
+defaults.ahk
+============
+
+To make it easier for you, most keys of the en-US QWERTY layout are turned into comboKeys in the
+file [defaults.ahk]. And `dual.modifier()` is run on all modifiers. Before including it, there are a
+few things to notice.
+
+- It assumes your `Dual` instance to be called `dual`.
+- It sets up hotkeys, so including it will end the auto-execute section.
+- You must wrap your hotkeys in `#If conditions`:s to override the defaults. You will get "duplicate
+  hotkey" errors otherwise.
+- You can probably use it even if you don't use en-US QWERTY. For example, Dvorak and Colemak should
+  make no difference. sv-SE QWERTY users should be fine, but might want to add å, ä and ö as
+  comboKeys. And so on.
+
+An example:
+
+    #Include <dual/dual>
+    dual := new Dual ; The instance is assumed to be called `dual`, so we'd better use that.
+
+    ; This must be included after the above, since it ends the auto-execute section.
+    #Include <dual/defaults>
+
+    ; Add sv-SE extra comboKeys.
+    *å::
+    *ä::
+    *ö::
+        dual.comboKey()
+        return
+
+    #If true ; Override defaults.ahk. There will be "duplicate hotkey" errors otherwise.
+
+    *Space::
+    *Space UP::dual.combine("RCtrl", A_ThisHotkey)
+
+    #If
+
+    #If settings.shift ; Using a "real" `#If` works, too, of course.
+
+    *f::
+    *f UP::dual.combine("LShift", A_ThisHotkey)
+    *j::
+    *j UP::dual.combine("RShift", A_ThisHotkey)
+
+    #If
 
 
 
@@ -401,12 +458,13 @@ no meaningful tests yet.)
 Changelog
 =========
 
-0.5.0 (Unreleased)
+0.5.0 (2013-11-17)
 ------------------
 
 - Removed: The `force` option. It never really worked. (Backwards incompatible change.)
 - Added: The `combinators` parameter of the `comboKey()` method, replacing the `force` option and
   the old advice on combinator shortcuts.
+- Added: defaults.ahk.
 
 0.4.3 (2013-11-13)
 ------------------
@@ -502,7 +560,7 @@ License
 [key list]:            http://www.autohotkey.com/docs/KeyList.htm
 [Limitations]:         #limitations
 [MIT Licensed]:        LICENSE
-[sample.ahk]:          sample.ahk
+[defaults.ahk]:        defaults.ahk
 [test/dual.ahk]:       test/dual.ahk
 [wikipedia-dual-role]: http://en.wikipedia.org/wiki/Modifier_key#Dual-role_keys
 [YUnit]:               https://github.com/Uberi/Yunit
