@@ -8,6 +8,12 @@ class Dual {
 	;;; Public methods.
 	; They are described in the readme. Remember to mirror the function headers there.
 
+	; Note that a "key" might mean a combination of many keys, however it is often referred to as if
+	; it was only one key, to simplify things. Sometimes, though, a key is referred to as a set of
+	; subKeys. Keys taken as parameters in the `combine()`, `comboKey()` and `modifier()` methods
+	; can either be a single key as a string (`"LShift"`) or an array of keys (`["LShift",
+	; "LCtrl"]`). (See the `Dual.subKeySet() utility.`)
+
 	__New(settings=false) {
 		Dual.override(this.settings, settings)
 	}
@@ -31,21 +37,17 @@ class Dual {
 
 		this.combo()
 
-		key := remappingKey ? remappingKey : Dual.cleanKey(A_ThisHotkey)
+		key := remappingKey ? remappingKey : A_ThisHotkey
 		for combinator, resultingKey in combinators {
 			if (GetKeyState(combinator)) {
 				key := resultingKey
 				break
 			}
 		}
-		Dual.sendInternal(key)
-	}
+		key := Dual.subKeySet(key)
 
-	allModifiers := ["LShift", "RShift", "LCtrl", "RCtrl", "LAlt", "RAlt", "LWin", "RWin"]
-	reset() {
-		this.keys := {}
-		for index, modifier in this.allModifiers {
-			SendInput {%modifier% up}
+		for index, subKey in key {
+			Dual.sendInternal(subKey)
 		}
 	}
 
@@ -98,6 +100,14 @@ class Dual {
 	modifier(remappingKey=false) {
 		key := remappingKey ? remappingKey : A_ThisHotkey
 		this.combine(key, key, {delay: 0, timeout: 0, doublePress: -1})
+	}
+
+	allModifiers := ["LShift", "RShift", "LCtrl", "RCtrl", "LAlt", "RAlt", "LWin", "RWin"]
+	reset() {
+		this.keys := {}
+		for index, modifier in this.allModifiers {
+			SendInput {%modifier% up}
+		}
 	}
 
 	SendInput(string) {
@@ -179,22 +189,9 @@ class Dual {
 		}
 	}
 
-	; Note that a key might mean a combination of many keys, however it is referred to as if it was
-	; only one key, to simplify things. Sometimes, though, a key is referred to as a set of subKeys.
 	class Key {
 		__New(key) {
-			; As mentioned above, a key might mean a combination of many keys. Therefore, `key` is
-			; an array. However, mostly a single key will be used so a bare string is also accepted.
-			if (not IsObject(key)) {
-				key := [key]
-			}
-
-			; Support subKeys coming from `A_ThisHotkey`.
-			for index, subKey in key {
-				key[index] := Dual.cleanKey(subKey)
-			}
-
-			this.key := key
+			this.key := Dual.subKeySet(key)
 		}
 
 		isDown := false
@@ -371,5 +368,20 @@ class Dual {
 		} else {
 			return A_TickCount - time
 		}
+	}
+
+	subKeySet(key) {
+		; A key might mean a combination of many keys. Therefore, `key` is an array. However, mostly
+		; a single key will be used so a bare string is also accepted.
+		if (not IsObject(key)) {
+			key := [key]
+		}
+
+		; Support subKeys coming from `A_ThisHotkey`.
+		for index, subKey in key {
+			key[index] := Dual.cleanKey(subKey)
+		}
+
+		return key
 	}
 }

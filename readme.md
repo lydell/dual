@@ -155,6 +155,10 @@ parameter. For example, if you previously swapped the following keys like so …
     *b::dual.comboKey("c")
     *c::dual.comboKey("a")
 
+Just like the `combine()` method, you may also pass an array of keys to be sent together:
+
+    *9::dual.comboKey(["(", ")", "Left"])
+
 See [Limitations] for documentation on the `combinators` parameter.
 
 An older version of Dual provided a setting called `Dual.comboKeys` instead of this method, which
@@ -168,9 +172,9 @@ This way is also more reliable.
 Lets you make a key into a comboKey without sending the key itself, in contrast to the `comboKey()`
 method.
 
-    9::
+    *a::
         dual.combo()
-        SendInput (){Left}
+        MsgBox Hello, World!
         return
 
 In fact, the `comboKey()` method (called without parameters) is roughly equivalent to:
@@ -199,7 +203,7 @@ You can solve this edge case by using the following:
     *RCtrl::
     *RCtrl UP::dual.modifier()
 
-You can optionally remap, just like the `comboKey()` method.
+The `remappingKey` parameter works just like it does in the `comboKey()` method.
 
 Note that if _only_ normal modifiers or _only_ dual-role keys are involved, this issue can never
 occur.
@@ -397,16 +401,20 @@ can:
 
     *d::dual.comboKey("f", {F12: "e"})
 
+The keys in the `combinators` parameter can also be arrays (as always):
+
+    *d::dual.comboKey("f", {F12: ["(", ")", "Left"]})
+
 But what if you wanted something more complex?
 
-    F12 & d::SendInput (){Left}
+    F12 & d::MsgBox Hello, World!
 
 Then you'll have to resort to something more manual:
 
     d::
         dual.combo()
         if (GetKeyState("F12")) {
-            SendInput (){Left}
+            MsgBox Hello, World!
         } else {
             SendInput d
         }
