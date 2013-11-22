@@ -4,8 +4,11 @@ Changelog
 0.5.1 (Unreleased)
 ------------------
 
-- Improved: The `comboKey()` method now accepts arrays of keys to be sent together in its parameters, just like the `combine()` and `modifier()` methods.
-- Improved: The `modifier()` method is now documented to accept an array of keys as its `remappingKey` parameter. It has worked by accident; no it's "official".
+- Improved: The `comboKey()` method now accepts arrays of keys to be sent together in its
+  parameters, just like the `combine()` and `modifier()` methods.
+- Improved: The `modifier()` method is now documented to accept an array of keys as its
+  `remappingKey` parameter. It has worked by accident; no it's "official".
+- Added: The `specificDelays` option.
 
 0.5.0 (2013-11-17)
 ------------------

@@ -220,7 +220,7 @@ upKey! The above example is actually equivalent to:
     *LCtrl::
     *LCtrl UP::
     *RCtrl::
-    *RCtrl UP::dual.combine(A_ThisHotkey, A_ThisHotkey, {delay: 0, timeout: 0, doublePress: -1})
+    *RCtrl UP::dual.combine(A_ThisHotkey, A_ThisHotkey, {delay: 0, timeout: 0, doublePress: -1, specificDelays: false})
 
 `dual.Send(string)`
 -------------------
@@ -275,7 +275,8 @@ defaults of the configuration.
 
 `delay` is the number of milliseconds that you must hold a dual-role key in order for it to count as
 a combination with another key (comboKeys only, though). Set it to `0` to turn off the feature (of
-course).
+course). You can really fine-tune things by setting different delays for different comboKeys, via
+the `specificDelays` option. More on that [below](#tips).
 
 `timeout` is the number of milliseconds after which the downKey starts to be sent, and the
 upKey won't be sent. Set it to `-1` to turn the feature off—to never timeout.
@@ -317,6 +318,38 @@ wasn't able to activate other Windows shortcuts, such as win-m (which minimizes 
 because I typed the shortcut too quickly: dual thought that I accidentally made a combination. After
 I while I found a balance.
 
+You might find that a delay works really well with most or some keys, and worse with others.
+
+For example, I've combined d with control. Using a delay of 70ms works great for me in most cases,
+but not with o for some reason. I know that since often when I want to type "don't", an "Open
+file..." dialog is opened instead, since I've accidentally triggered a control-o shortcut, which is
+commonly used to open files. So for o, I need a longer delay.
+
+I've also combined f with shift. Here I use a delay of 70ms too, but the problem is the other way
+around. When I want to type a colon (shift-;), I sometimes end up with f;. When I want to type a
+left parenthesis, I sometimes end up with f9. So for ; and 9 I need a shorter delay.
+
+Actually, I've noticed that I can benefit from a shorter delay when using all my dual-role keys with
+numbers. I achieve that by setting the `specificDelays` option globally:
+
+    dual := new Dual({specificDelays: {"1 2 3 4 5 6 7 8 9 0": 20}})
+
+Then I extend that in some of my dual-role keys:
+
+    *d::
+    *d UP::dual.combine("LControl", A_ThisHotkey, {specificDelays: {extend: true, "o": 150}})
+
+    *f::
+    *f UP::dual.combine("LShift", A_ThisHotkey, {specificDelays: {extend: true, ";": 20}})
+
+`extend: true` makes the key-level option extend the global option, instead of overriding it as
+usual. It is possible to set `specificDelays` to `false` to turn it off:
+
+    *s::
+    *s UP::dual.combine("LAlt", A_ThisHotkey, {specificDelays: false})
+
+In short, the `specificDelays` option is a map of space separated lists of keys and delays.
+
 
 
 defaults.ahk
@@ -350,19 +383,15 @@ An example:
         return
 
     #If true ; Override defaults.ahk. There will be "duplicate hotkey" errors otherwise.
-
     *Space::
     *Space UP::dual.combine("RCtrl", A_ThisHotkey)
-
     #If
 
     #If settings.shift ; Using a "real" `#If` works, too, of course.
-
     *f::
     *f UP::dual.combine("LShift", A_ThisHotkey)
     *j::
     *j UP::dual.combine("RShift", A_ThisHotkey)
-
     #If
 
 
@@ -475,12 +504,12 @@ License
 [BigCtrl]:             https://github.com/benhansenslc/BigCtrl
 [comboKey]:            details.md#combokeys
 [Configuration]:       #configuration
+[defaults.ahk]:        defaults.ahk
 [details]:             details.md
 [KeePass]:             http://keepass.info/
 [key list]:            http://www.autohotkey.com/docs/KeyList.htm
 [Limitations]:         #limitations
 [MIT Licensed]:        LICENSE
-[defaults.ahk]:        defaults.ahk
 [test/dual.ahk]:       test/dual.ahk
 [wikipedia-dual-role]: http://en.wikipedia.org/wiki/Modifier_key#Dual-role_keys
 [YUnit]:               https://github.com/Uberi/Yunit

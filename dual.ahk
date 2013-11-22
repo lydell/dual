@@ -2,7 +2,7 @@ class Dual {
 	;;; Settings.
 	; They are described in detail in the readme. Remember to mirror the defaults there.
 
-	settings := {delay: 70, timeout: 300, doublePress: 200}
+	settings := {delay: 70, timeout: 300, doublePress: 200, specificDelays: false}
 
 
 	;;; Public methods.
@@ -35,7 +35,7 @@ class Dual {
 			remappingKey := false
 		}
 
-		this.combo()
+		this.combo(Dual.cleanKey(A_ThisHotkey))
 
 		key := remappingKey ? remappingKey : A_ThisHotkey
 		for combinator, resultingKey in combinators {
@@ -52,14 +52,14 @@ class Dual {
 	}
 
 	; `justReleasedDownKeyTimeDown` is not documented in the readme, since it is only used internally.
-	combo(justReleasedDownKeyTimeDown=-1) {
+	combo(currentKey, justReleasedDownKeyTimeDown=-1) {
 		shorterTimeDownKeys := []
 		for originalKey, keys in this.keys {
 			upKey := keys.upKey
 			downKey := keys.downKey
 			if (downKey.isDown) {
 				downKeyTimeDown := downKey.timeDown()
-				withinDelay := (downKeyTimeDown < keys.delay)
+				withinDelay := (downKeyTimeDown < keys.getDelay(currentKey))
 				if (downKeyTimeDown < justReleasedDownKeyTimeDown) {
 					; Let's say you've combined f with shift and d with control. You press down f,
 					; and then d, as to use a shift-control shortcut. However, you change your mind:
@@ -99,7 +99,7 @@ class Dual {
 
 	modifier(remappingKey=false) {
 		key := remappingKey ? remappingKey : A_ThisHotkey
-		this.combine(key, key, {delay: 0, timeout: 0, doublePress: -1})
+		this.combine(key, key, {delay: 0, timeout: 0, doublePress: -1, specificDelays: false})
 	}
 
 	allModifiers := ["LShift", "RShift", "LCtrl", "RCtrl", "LAlt", "RAlt", "LWin", "RWin"]
@@ -176,6 +176,29 @@ class Dual {
 			this.downKey := new Dual.Key(downKey)
 			this.upKey   := new Dual.Key(upKey)
 			Dual.override(defaults, settings, {onto: this})
+
+			if (settings.specificDelays.extend) {
+				this.specificDelays.Remove("extend")
+				for keySet, delay in defaults.specificDelays {
+					if (not ObjHasKey(this.specificDelays, keySet)) {
+						this.specificDelays[keySet] := delay
+					}
+				}
+			}
+
+			this._specificDelays := []
+			for keySet, delay in this.specificDelays {
+				this._specificDelays.Insert({keySet: StrSplit(keySet, " "), delay: delay})
+			}
+		}
+
+		getDelay(key) {
+			for index, specificDelay in this._specificDelays {
+				if (Dual.contains(specificDelay.keySet, key)) {
+					return specificDelay.delay
+				}
+			}
+			return this.delay
 		}
 
 		; Releases a dual-role key that is held down, and sends its upKey, so that it behaves as if
@@ -307,7 +330,7 @@ class Dual {
 			and (downKeyTimeDown < keys.timeout or keys.timeout == -1)
 			and not upKey.alreadySend) {
 			; Dual-role keys are automatically comboKeys.
-			shorterTimeDownKeys := this.combo(downKeyTimeDown)
+			shorterTimeDownKeys := this.combo(Dual.cleanKey(currentKey), downKeyTimeDown)
 			; At this point, the upKey should be sent, mostly. However, there is one exception,
 			; explained in `combo()`.
 			if (shorterTimeDownKeys != false) { ; The exception referred to above.
@@ -359,7 +382,6 @@ class Dual {
 			}
 			overrided[key] := value
 		}
-		return overrided
 	}
 
 	timeSince(time) {
@@ -383,5 +405,14 @@ class Dual {
 		}
 
 		return key
+	}
+
+	contains(array, searchItem) {
+		for index, item in array {
+			if (searchItem == item) {
+				return true
+			}
+		}
+		return false
 	}
 }
