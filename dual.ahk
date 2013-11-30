@@ -18,10 +18,10 @@ class Dual {
 		Dual.override(this.settings, settings)
 	}
 
-	combine(downKey, upKey, settings=false) {
+	combine(downKey, upKey, settings=false, combinators=false) {
 		currentKey := A_ThisHotkey
 		lastKey := A_PriorHotkey
-		keys := this.getKeysFor(currentKey, downKey, upKey, settings)
+		keys := this.getKeysFor(currentKey, downKey, upKey, settings, combinators)
 
 		; A single `=` means case insensitive comparison. `-1` means the last two characters.
 		keyState := (SubStr(currentKey, -1) = "UP") ? "keyup" : "keydown"
@@ -38,17 +38,7 @@ class Dual {
 		this.combo(Dual.cleanKey(A_ThisHotkey))
 
 		key := remappingKey ? remappingKey : A_ThisHotkey
-		for combinator, resultingKey in combinators {
-			if (GetKeyState(combinator)) {
-				key := resultingKey
-				break
-			}
-		}
-		key := Dual.subKeySet(key)
-
-		for index, subKey in key {
-			Dual.sendInternal(subKey)
-		}
+		Dual.sendSubKeySet(key, combinators)
 	}
 
 	; `justReleasedDownKeyTimeDown` is not documented in the readme, since it is only used internally.
@@ -160,21 +150,21 @@ class Dual {
 	}
 
 	keys := {}
-	getKeysFor(currentKey, downKey, upKey, settings) {
+	getKeysFor(currentKey, downKey, upKey, settings, combinators) {
 		cleanKey := Dual.cleanKey(currentKey)
 		if (this.keys[cleanKey]) {
 			keys := this.keys[cleanKey]
 		} else {
-			keys := new Dual.KeyPair(downKey, upKey, this.settings, settings)
+			keys := new Dual.KeyPair(downKey, upKey, this.settings, settings, combinators)
 			this.keys[cleanKey] := keys
 		}
 		return keys
 	}
 
 	class KeyPair {
-		__New(downKey, upKey, defaults, settings) {
+		__New(downKey, upKey, defaults, settings, combinators) {
 			this.downKey := new Dual.Key(downKey)
-			this.upKey   := new Dual.Key(upKey)
+			this.upKey   := new Dual.Key(upKey, combinators)
 			Dual.override(defaults, settings, {onto: this})
 
 			if (settings.specificDelays.extend) {
@@ -213,8 +203,9 @@ class Dual {
 	}
 
 	class Key {
-		__New(key) {
+		__New(key, combinators=false) {
 			this.key := Dual.subKeySet(key)
+			this.combinators := combinators
 		}
 
 		isDown := false
@@ -270,13 +261,16 @@ class Dual {
 
 		send() {
 			this._lastUpTime := A_TickCount
-			for index, key in this.key { ; (*)
-				Dual.sendInternal(key)
-			}
+			; `combinators` (if any) are only taken into account in this method, not in `down()` and
+			; `up()`, to keep things simple. It doesn't make sense to use combinators for the
+			; downKey, so it does not have `this.combinators`. In reality, only the downKey uses the
+			; `down()` and `up()` methods, and only the upKey uses the `send()` method. YAGNI for
+			; now.
+			Dual.sendSubKeySet(this.key, this.combinators) ; (*)
 		}
 
-		; (*) The `down()`, `up()` and `send()` methods send input in a loop, since a key might be
-		; a combination of keys, as mentioned before.
+		; (*) The `down()`, `up()` and `send()` (via `Dual.sendSubKeySet()`) methods send input in a
+		; loop, since a key might be a combination of keys, as mentioned before.
 
 		_timeDown := false
 		timeDown() {
@@ -405,6 +399,21 @@ class Dual {
 		}
 
 		return key
+	}
+
+	sendSubKeySet(key, combinators=false) {
+		for combinator, resultingKey in combinators {
+			if (GetKeyState(combinator)) {
+				key := resultingKey
+				break
+			}
+		}
+
+		key := Dual.subKeySet(key)
+
+		for index, subKey in key {
+			Dual.sendInternal(subKey)
+		}
 	}
 
 	contains(array, searchItem) {

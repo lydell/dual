@@ -99,8 +99,8 @@ available settings.
 
 Throughout the rest of the documentation, `dual` is assumed to be an instance of the `Dual` class.
 
-`dual.combine(downKey, upKey, settings=false)`
-----------------------------------------------
+`dual.combine(downKey, upKey, settings=false, combinators=false)`
+-----------------------------------------------------------------
 
 In a nutshell, a dual-role key sends one key when held down—called the "downKey"—and one when
 released—called the "upKey."
@@ -126,6 +126,8 @@ at key-level:
     *r UP::dual.combine("LWin", A_ThisHotkey, {delay: 100})
 
 Key-level settings have been invaluable for me when experimenting with modifiers on the home row.
+
+See [Limitations] for documentation on the `combinators` parameter.
 
 An older version of Dual provided a method called `set()` instead of `combine()`, which set up the
 keys for you, using the `Hotkey` command. That was perhaps a bit more convenient (you didn't have to
@@ -419,8 +421,8 @@ the following, to be able to be activated by a dual-role key:
 
 However, you might find such shortcuts more laggy than native shortcuts. It seems like you have to
 hold your dual-role key for more that the timeout for the shortcuts to actually trigger, comboKeys
-or not. So dual provides a different way of achieving this, using the second parameter `combinators`
-of the `comboKey()` method.
+or not. So dual provides a different way of achieving this, using the `combinators` parameter of the
+`combine()` and `comboKey()` methods.
 
     *d::dual.comboKey({F12: "e"})
 
@@ -462,6 +464,8 @@ the keyboard.
 
 The above example turns space into a homemade modifier that puts the navigation keys on ijkl. This
 is done by using a key not present on most keyboards (F22).
+
+The `combinators` parameter of the `combine()` method works the same way.
 
 Modifier hotkeys that send
 --------------------------

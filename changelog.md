@@ -9,6 +9,7 @@ Changelog
 - Improved: The `modifier()` method is now documented to accept an array of keys as its
   `remappingKey` parameter. It has worked by accident; no it's "official".
 - Added: The `specificDelays` option.
+- Added: The `combinators` parameter of the `combine()` method, just like the `comboKey()` method.
 
 0.5.0 (2013-11-17)
 ------------------
