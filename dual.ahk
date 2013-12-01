@@ -349,7 +349,12 @@ class Dual {
 
 	; Cleans keys coming from `A_ThisHotkey`, which might look like `*j UP`.
 	cleanKey(key) {
-		return RegExReplace(key, "i)^[#!^+<>*~$]+| up$", "")
+		; Allow single `#`, `!`, `^` etc.
+		if (StrLen(key) == 1) {
+			return key
+		} else {
+			return RegExReplace(key, "i)^[#!^+<>*~$]+| up$", "")
+		}
 	}
 
 	static sentKeys := false

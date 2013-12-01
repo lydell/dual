@@ -10,6 +10,8 @@ Changelog
   `remappingKey` parameter. It has worked by accident; no it's "official".
 - Added: The `specificDelays` option.
 - Added: The `combinators` parameter of the `combine()` method, just like the `comboKey()` method.
+- Fixed: Any of the characters #!^+<>*~$ may now be used as downKeys, upKeys, remappingKeys and in
+  combinators. They were accidentally stripped out before.
 
 0.5.0 (2013-11-17)
 ------------------
