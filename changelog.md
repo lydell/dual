@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.5.1 (Unreleased)
+0.6.0 (2013-12-01)
 ------------------
 
 - Improved: The `comboKey()` method now accepts arrays of keys to be sent together in its
