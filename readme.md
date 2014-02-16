@@ -10,6 +10,11 @@ perhaps in an already existing remapping script.
 It is currently quite stable and feature complete, but needs more testing. However, until version
 1.0.0 is released, the API might change in backwards incompatible ways without warning.
 
+The biggest thing blocking 1.0.0 are the unit tests.
+
+**I'm looking for a maintainer.** I have moved away from Windows to Linux, and therefore do not use
+AutoHotkey anymore. If you like dual and would like to maintain it, please contact me.
+
 
 
 Usage
