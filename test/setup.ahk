@@ -12,13 +12,22 @@ assert(args*) {
 
 sent(keys*) {
 	waitForKeys()
+
 	message := "Expected: [" . join(keys) . "]. Actual: [" . join(Dual.sentKeys) . "]."
+	fail := [false, message]
+	pass := [true]
+
+	if (keys.MaxIndex() != Dual.sentKeys.MaxIndex()) {
+		return fail
+	}
+
 	for index, key in keys {
 		if (Dual.sentKeys[index] != key) {
-			return [false, message]
+			return fail
 		}
 	}
-	return [true]
+
+	return pass
 }
 
 waitForKeys() {
@@ -43,7 +52,7 @@ test(aTests*) {
 	SetTimer test, -0
 }
 
-Hotkey, F4, exit
+Hotkey, Esc, exit
 
 Goto end
 
