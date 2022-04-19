@@ -1,3 +1,10 @@
+ABANDONED
+=========
+
+I don’t use this myself anymore, and this is not maintained.
+
+You might want to try [ililim/dual-key-remap](https://github.com/ililim/dual-key-remap) instead.
+
 Overview
 ========
 
